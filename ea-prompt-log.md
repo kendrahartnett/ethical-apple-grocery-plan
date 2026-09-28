@@ -208,6 +208,127 @@ Every prompt Kendra sent while directing this project's build, logged verbatim i
 
 > I need you to create a file in the project called: "ea-prompt-log.md" and keep track of all of my project prompts to show my build control. I will have additional structure for that at the end of our build
 
+### 24
+2026-09-28, 12:37 CT
+
+> Before we do that, create an MVP plan with scope details, the problem I am addressing with this app solution, and the user stories as well in a md doc and add to the project folder
+
+### 25
+2026-09-28, 12:45 CT
+
+> [attached screenshot of the "Ethical Apple" Loveable landing page design: "Made for Chicago" tag, headline "Make your grocery budget go further.", subhead about planning meals/building a grocery list/comparing nearby Chicago grocery options based on budget]
+> I am waiting on Loveable. it will be delivered later today. Let's create a README.md in the project and then let's start up our Mapbox api
+
+### 26
+2026-09-28, 12:52 CT
+
+> It wants me to pay money and I don't have the ability to do this. We need to rethink the API
+
+### 27 — Clarifying question response
+2026-09-28
+
+> Question: Which free, no-card geocoding option do you want to use instead of Mapbox? → **US Census Geocoder**
+
+### 28
+2026-09-28, 12:56 CT
+
+> [pasted content from another AI conversation proposing a hybrid architecture: Kendra's JavaScript controls facts/constraints and validates output; an LLM (via a small serverless function holding a secret API key) generates meal ideas from a controlled, permitted ingredient list and returns structured JSON; guiding principle "AI generates suggestions. My application validates decisions." Included a sample architecture diagram and three backend-key-handling options (small serverless function / Custom GPT / simulate LLM in prototype).]
+
+### 29 — Clarifying question response
+2026-09-28
+
+> Question: Do you want to change the meal-plan architecture to the hybrid LLM approach, or keep the rule-based-only build you already locked in? → **Switch to hybrid LLM approach**
+
+### 30 — Clarifying question responses
+2026-09-28
+
+> Question: Which LLM API should the serverless function call for meal-idea generation? → **"I think I want to challenge myself a little bit."** followed by a specified project folder structure:
+> ethical-apple/ ├── index.html ├── styles.css ├── app.js ├── data/ (groceries.js, stores.js) ├── js/ (budget.js, mealPlan.js, storeCompare.js, ui.js) └── api/ (generateMealPlan.js)
+> Question: Where should the small serverless function live? → **No preference**
+
+### 31 — Clarifying question response
+2026-09-28
+
+> Question: Both Claude's API and OpenAI's API typically require a card even for a free credit — given that, which do you want to use? → **OpenAI API — I have/will add a card for a small free credit**
+
+### 32
+2026-09-28, 13:22 CT
+
+> We're going back to the HTML, CSS, and JS structure first: Yes — the actual build can start drifting away from demonstrating control if we add too much infrastructure too early.
+> For your assignment, I would simplify the build and make sure you personally own the core mechanics.
+> I'd structure it like this: index.html, styles.css, app.js, data.js
+> Then build the whole working prototype with just those files first.
+> index.html = your screens and form structure. styles.css = your visual system. data.js = your controlled grocery items, sample store prices, and maybe a few recipe building blocks. app.js = the actual behavior: read form inputs, calculate budget per day/person, build the shopping list, compare store totals, calculate distance, choose closest/cheapest/balanced options, update the UI.
+> That is a very strong "I built this" project because you can trace everything directly.
+> Then, only after that works, add the LLM as one small enhancement.
+> So instead of: user input → LLM figures everything out → results
+> build this: user input → YOUR JS calculates constraints → YOUR JS prepares allowed ingredients/data → LLM suggests meal combinations → YOUR JS checks the response → YOUR JS calculates cost → YOUR JS displays results
+> And I would treat the Vercel Function as a final integration step, not part of your initial build.
+> A good order for you would be: Version 1 — HTML/CSS/JS only, everything works with controlled data. Version 2 — add real location/distance API data. Version 3 — add the LLM meal-plan feature behind one small serverless function.
+> That progression is actually excellent evidence of control because you can show: "The app worked before I added AI. I deliberately added AI only to improve the part that benefits from flexible generation."
+> So yes, I'd pull us back slightly. Build the app yourself first; integrate the LLM second.
+
+### 33
+2026-09-28, 13:26 CT
+
+> YEs
+> (Approval to draft the Version 1 `data.js` sample dataset and `app.js` skeleton — budget/meal-plan logic, shopping list, store comparison and sorting — ready to slot into the Loveable `index.html`/`styles.css` once it arrives.)
+
+### 34
+2026-09-28, 13:31 CT
+
+> Update the mvp doc in the project to reflect ONLY the current version we are creating, along with future plans listed below. It needs cleaning up a little bit, update the architecture as well
+
+### 35
+2026-09-28
+
+> Do we need to create the user form for submission?
+
+### 36 — Clarifying question response
+2026-09-28
+
+> Question: What has Loveable delivered so far, and what should be built next? → **So far all I have is a landing page and the CTA button to "Build my grocery plan" and there's another button to see how it works. What other pages should I build and I will add a navbar as well.**
+
+### 37
+2026-09-28
+
+> [attached file: dd6694ec-ethical-apple-source.zip — the Loveable-generated source code for Ethical Apple: a complete 4-screen Vite-based app (index.html, package.json, vite.config.js, public/favicon.svg, src/main.js, src/styles.css, src/reference.css), including its own built-in sample meal-plan and store-comparison logic]
+
+### 38 — Clarifying question response
+2026-09-28
+
+> Question: Loveable's zip has its own built-in meal-plan/store logic, separate from the `data.js`/`app.js` logic already built and tested — should that be replaced with Kendra's own logic, or should Loveable's built-in logic be kept? → **Replace Loveable's logic with ours (Recommended)**
+
+### 39 — Clarifying question response
+2026-09-28
+
+> Question: Loveable's zip uses Vite as a build tool — keep Vite, or strip the project down to plain static HTML/CSS/JS files? → **Keep Vite (Recommended)**
+
+### 40
+2026-09-28, 16:20 CT
+
+> how do I run and open my project from the terminal
+
+### 41
+2026-09-28, 16:26 CT
+
+> Where can I find the store info for store comparison? We need to add a few more items
+
+### 42
+2026-09-28, 16:28 CT
+
+> Pick a few more real Chicago Grocers such as Walmart, Target, Rico Fresh Market and show me the list for approval
+
+### 43
+2026-09-28, 16:31 CT
+
+> Rico Fresh Market address: 3552 W. Armitage Ave, Chicago, IL 60647 . The Target is (Logan Square/Milwaukee Ave) Address: 2434 N. Sacramento Ave, Chicago IL 60647
+
+### 44
+2026-09-28, 16:33 CT
+
+> Update the README.md to reflect the current project structure
+
 ---
 
 *This file is appended to as the build continues. Kendra will add additional structure to this log later.*

@@ -1,13 +1,13 @@
 # Ethical Apple
 
-A front-end grocery budgeting and meal-planning app for Chicago residents, built with HTML, CSS, and JavaScript — no backend, no database, no external AI/LLM API calls at runtime.
+A grocery budgeting and meal-planning app for Chicago residents.
 
 **Program:** Next Chapter Project — Week 3, Phase 1 Gate ("The AI-Built Solution")
 **Author:** Kendra Hartnett
 
 ## What it does
 
-Tell Ethical Apple your grocery budget, household size, how many days it needs to cover, and what food you already have on hand — it builds a realistic meal plan and itemized shopping list that fits your budget, then compares a small set of nearby Chicago grocery stores on estimated cost and approximate distance so you can decide where to shop.
+Tell Ethical Apple your grocery budget, household size, how many days it needs to cover, and what food you already have on hand — it builds a realistic meal plan and itemized shopping list that fits your budget, then compares nearby Chicago grocery stores on estimated cost and approximate distance so you can decide where to shop.
 
 ## Problem
 
@@ -15,13 +15,46 @@ People shopping on very limited grocery budgets often have difficulty determinin
 
 See `mvp-plan.md` for the full problem statement, scope, and user stories.
 
-## How it's built
+## Current version — Version 1
 
-- **HTML / CSS / JavaScript only** — a static front-end prototype, no backend or database.
-- **All affordability and recommendation logic is hand-written JavaScript**: budget ÷ days ÷ household size → meal selection accounting for what's on hand → itemized shopping list with estimated costs → budget check → substitutions if over budget.
-- **Mapbox Geocoding API** is used for one thing only: converting a Chicago ZIP/neighborhood and the supported stores' addresses into coordinates. A self-written Haversine formula then calculates approximate straight-line distance between them.
-- **Sample/illustrative grocery pricing data** for a small set of Chicago stores and staple items — not live store pricing (see the data investigation doc for why).
-- Store comparison can be sorted four ways: Lowest Grocery Cost, Closest Store, One-Stop Shopping, Balance of Price and Distance.
+This is the currently built version: a fully working front end with **no external API calls**. All budgeting, meal-selection, and store-comparison logic is Kendra's own hand-written JavaScript, running against a controlled sample dataset (illustrative grocery prices, six Chicago-area stores, and simple meal templates). Store distance is currently a sample placeholder value — see "Future plans" below.
+
+The visual design/UI shell was generated with Loveable (a Vite-based front end); **all decision-making logic was written and tested independently, then wired into that UI** — Loveable's own built-in sample logic was replaced entirely with Kendra's own code (`src/planLogic.js` / `src/data.js`).
+
+### Supported stores
+
+Six sample Chicago-area stores are currently included in `src/data.js`: Aldi (Logan Square), Jewel-Osco (Lincoln Park), Food 4 Less (Pilsen), Walmart Supercenter (North Ave), Target (Logan Square/Milwaukee Ave), and Rico Fresh Market. Prices, coverage, and distance for each are sample/illustrative figures, not live retailer data.
+
+### Project structure
+
+```
+ethical-apple/
+├── index.html          (Vite entry point — Loveable-generated markup/shell)
+├── package.json         (Vite project config + scripts)
+├── vite.config.js        (Vite build/dev server config)
+├── public/
+│   └── favicon.svg
+└── src/
+    ├── main.js          (screens, rendering, event wiring — Loveable-generated UI,
+    │                      wired up to call Kendra's own planLogic.js)
+    ├── data.js          (Kendra's own controlled dataset: grocery items, sample
+    │                      store prices/details, meal templates — not part of
+    │                      Loveable's output)
+    ├── planLogic.js      (Kendra's own decision-making logic: budget math, meal
+    │                      selection, shopping list, store comparison/sorting —
+    │                      not part of Loveable's output)
+    ├── styles.css        (Loveable-generated visual system)
+    └── reference.css     (Loveable-generated supporting styles)
+```
+
+Run locally with `npm install` then `npm run dev` (or `npm run build` / `npm run preview` for a production build).
+
+## Future plans (not yet built)
+
+- **Version 2 — real location/distance.** Swap the sample `sampleDistanceMiles` placeholder for real distance, using the free US Census Geocoder (no API key/account needed — chosen after Mapbox turned out to require a payment method) plus a self-written Haversine formula.
+- **Version 3 — hybrid LLM meal-plan enhancement.** Add OpenAI-generated meal ideas behind one small serverless function that holds the secret API key. The LLM will only ever be allowed to suggest meal ideas from a pre-approved ingredient list; Kendra's own JavaScript validates every response and continues to own all pricing, budget, and store-comparison decisions. Guiding principle: *"AI generates suggestions. My application validates decisions."*
+
+Both are deliberately deferred so the core mechanics are fully working and fully Kendra's own before any external API or AI is introduced — see `mvp-plan.md` for the full phased architecture.
 
 ## Project docs
 
@@ -30,10 +63,10 @@ See `mvp-plan.md` for the full problem statement, scope, and user stories.
 
 ## Status
 
-Actively being built for the Week 3 Phase 1 gate. Front-end design provided via Loveable; JavaScript logic (budgeting, meal planning, Mapbox geocoding + Haversine distance, store comparison) is being wired into it.
+Version 1 is built, tested, and committed. Loveable's UI shell is wired to Kendra's own tested logic (verified via unit-style tests, a Vite production build, and a full Playwright end-to-end browser test across all 4 screens). Six sample stores are supported. Version 2 and Version 3 are planned next.
 
 ## Limitations (disclosed intentionally)
 
 - Store prices shown are sample/illustrative figures, not live pricing.
-- Distances shown are approximate straight-line distances, not driving, walking, or transit distance.
+- Distances shown are a fixed sample placeholder in this version (not yet real — see Version 2 above).
 - Only a small set of Chicago stores and staple items are supported in this MVP.
