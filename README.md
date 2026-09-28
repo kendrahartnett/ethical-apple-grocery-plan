@@ -1,5 +1,9 @@
 # Ethical Apple
 
+![Ethical Apple landing page](docs/landing-page.png)
+
+🚧 [Live Demo coming soon](vercel)
+
 A grocery budgeting and meal-planning app for Chicago residents.
 
 **Program:** Next Chapter Project — Week 3, Phase 1 Gate ("The AI-Built Solution")
@@ -29,22 +33,19 @@ Six sample Chicago-area stores are currently included in `src/data.js`: Aldi (Lo
 
 ```
 ethical-apple/
-├── index.html          (Vite entry point — Loveable-generated markup/shell)
+├── index.html          (Vite entry point — Replit-generated markup/shell)
 ├── package.json         (Vite project config + scripts)
 ├── vite.config.js        (Vite build/dev server config)
 ├── public/
 │   └── favicon.svg
 └── src/
-    ├── main.js          (screens, rendering, event wiring — Loveable-generated UI,
-    │                      wired up to call Kendra's own planLogic.js)
-    ├── data.js          (Kendra's own controlled dataset: grocery items, sample
-    │                      store prices/details, meal templates — not part of
-    │                      Loveable's output)
+    ├── main.js          
+    ├── data.js          (Controlled dataset: grocery items, sample
+    │                      store prices/details, meal templates)
     ├── planLogic.js      (Kendra's own decision-making logic: budget math, meal
-    │                      selection, shopping list, store comparison/sorting —
-    │                      not part of Loveable's output)
-    ├── styles.css        (Loveable-generated visual system)
-    └── reference.css     (Loveable-generated supporting styles)
+    │                      selection, shopping list, store comparison/sorting)
+    ├── styles.css        (Directed by builder Replit-generated visual system)
+    └── reference.css     (Directed by builder Replit-generated supporting styles)
 ```
 
 Run locally with `npm install` then `npm run dev` (or `npm run build` / `npm run preview` for a production build).
@@ -63,7 +64,7 @@ Both are deliberately deferred so the core mechanics are fully working and fully
 
 ## Status
 
-Version 1 is built, tested, and committed. Loveable's UI shell is wired to Kendra's own tested logic (verified via unit-style tests, a Vite production build, and a full Playwright end-to-end browser test across all 4 screens). Six sample stores are supported. Version 2 and Version 3 are planned next.
+Version 1 is built, tested, and committed. Replit's UI shell is wired to Kendra's own tested logic (verified via unit-style tests, a Vite production build, and a full Playwright end-to-end browser test across all 4 screens). Six sample stores are supported. Version 2 and Version 3 are planned next.
 
 ## Limitations (disclosed intentionally)
 

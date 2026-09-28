@@ -329,6 +329,18 @@ Every prompt Kendra sent while directing this project's build, logged verbatim i
 
 > Update the README.md to reflect the current project structure
 
+### 45
+2026-09-28, 16:36 CT
+
+> I need one for adding all of these files recently
+> (Requested a git commit message covering the full Loveable/Vite integration, the store additions, and the doc updates.)
+
+### 46
+2026-09-28, 16:39 CT
+
+> [attached image: Ethical Apple landing page screenshot — "A GROCERY PLAN WITH A LITTLE MORE CARE." headline, "Budget First"/"Pantry Aware" callout cards, "Build My Grocery Plan"/"See How It Works" buttons]
+> Add this image to the top of my README.md doc
+
 ---
 
 *This file is appended to as the build continues. Kendra will add additional structure to this log later.*
