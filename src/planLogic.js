@@ -8,10 +8,11 @@
  * this module decides. No external API calls happen here in Version 1.
  */
 
-import { GROCERY_ITEMS, MEAL_TEMPLATES, STORES } from "./data.js";
+import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES, STORES } from "./data.js";
 
-// $1.25/person/day is roughly the floor for even the cheapest staples.
-const MIN_PER_PERSON_PER_DAY = 1.25;
+// Roughly $1.30 (breakfast) + $1.30 (lunch) + $1.90 (dinner) per person per
+// day is the floor for even the cheapest staples across three meals a day.
+const MIN_PER_PERSON_PER_DAY = 4.5;
 
 /**
  * Parse the "already on hand" free-text field into a Set of GROCERY_ITEMS
@@ -49,8 +50,14 @@ function mealCost(meal, householdSize, onHandIds) {
  * what still needs to be bought. Ingredients already on hand are still
  * listed (so the user can see the full picture) but marked pantryMatch
  * with $0 estimated cost.
+ *
+ * A few staples (bread, tortillas) are bought in bulk units that
+ * realistically cover several days on their own, no matter how many meals
+ * use them or how large the household is (one loaf of bread, one pack of
+ * tortillas). Those items carry a `daysPerUnit` on GROCERY_ITEMS and are
+ * quantified off the plan length instead of summed per-meal usage.
  */
-function buildShoppingList(meals, householdSize, onHandIds) {
+function buildShoppingList(meals, householdSize, onHandIds, days) {
   const quantities = {}; // itemId -> total qty needed across the whole plan
 
   meals.forEach((meal) => {
@@ -68,7 +75,9 @@ function buildShoppingList(meals, householdSize, onHandIds) {
     if (!item) return;
 
     const pantryMatch = onHandIds.has(itemId);
-    const roundedQty = Math.max(1, Math.ceil(qty)); // buy in whole units
+    const roundedQty = item.daysPerUnit
+      ? Math.max(1, Math.ceil(days / item.daysPerUnit)) // bulk staple: covers several days per unit
+      : Math.max(1, Math.ceil(qty)); // buy in whole units
     const estimatedCost = pantryMatch ? 0 : roundedQty * item.price;
     if (!pantryMatch) totalCost += estimatedCost;
 
@@ -122,7 +131,15 @@ export function generatePlan({ budget, householdSize, days, onHandIds, vegetaria
     return (b.pantryFriendly ? 1 : 0) - (a.pantryFriendly ? 1 : 0);
   });
 
-  if (candidates.length === 0) {
+  // Partition the sorted candidates by meal type (breakfast/lunch/dinner)
+  // so each day gets one of each, instead of one meal total.
+  const byType = {};
+  MEAL_TYPES.forEach((type) => {
+    byType[type] = candidates.filter((m) => m.mealType === type);
+  });
+  const missingType = MEAL_TYPES.find((type) => byType[type].length === 0);
+
+  if (candidates.length === 0 || missingType) {
     return {
       meals: [],
       shoppingList: [],
@@ -132,20 +149,32 @@ export function generatePlan({ budget, householdSize, days, onHandIds, vegetaria
     };
   }
 
-  // Pick one meal per day, cycling through the sorted candidates for variety.
+  // Pick one breakfast, one lunch, and one dinner per day, cycling through
+  // each type's sorted candidates for variety (repeats are allowed once a
+  // type's options run out for longer plans).
   let selectedMeals = [];
   for (let day = 0; day < days; day++) {
-    selectedMeals.push(candidates[day % candidates.length]);
+    MEAL_TYPES.forEach((type) => {
+      const typeCandidates = byType[type];
+      selectedMeals.push(typeCandidates[day % typeCandidates.length]);
+    });
   }
 
-  let { shoppingList, totalCost } = buildShoppingList(selectedMeals, householdSize, onHandIds);
+  let { shoppingList, totalCost } = buildShoppingList(selectedMeals, householdSize, onHandIds, days);
 
   // If over budget, substitute the priciest non-pantry-friendly meals with
-  // cheaper pantry-friendly ones until it fits, or until substitutions run out.
+  // cheaper pantry-friendly meals of the SAME type (swapping a dinner for a
+  // pantry-friendly dinner, not a breakfast) until it fits, or until
+  // substitutions run out.
   let attempts = 0;
-  const pantryFriendlyCandidates = candidates.filter((m) => m.pantryFriendly);
+  const pantryFriendlyByType = {};
+  const substitutionCounts = {};
+  MEAL_TYPES.forEach((type) => {
+    pantryFriendlyByType[type] = byType[type].filter((m) => m.pantryFriendly);
+    substitutionCounts[type] = 0;
+  });
 
-  while (totalCost > budget && attempts < selectedMeals.length && pantryFriendlyCandidates.length > 0) {
+  while (totalCost > budget && attempts < selectedMeals.length) {
     let worstIndex = -1;
     let worstCost = -1;
     selectedMeals.forEach((meal, idx) => {
@@ -159,10 +188,15 @@ export function generatePlan({ budget, householdSize, days, onHandIds, vegetaria
 
     if (worstIndex === -1) break;
 
-    const replacement = pantryFriendlyCandidates[attempts % pantryFriendlyCandidates.length];
-    selectedMeals[worstIndex] = replacement;
+    const type = selectedMeals[worstIndex].mealType;
+    const replacements = pantryFriendlyByType[type];
+    if (!replacements || replacements.length === 0) break;
 
-    const rebuilt = buildShoppingList(selectedMeals, householdSize, onHandIds);
+    const replacement = replacements[substitutionCounts[type] % replacements.length];
+    selectedMeals[worstIndex] = replacement;
+    substitutionCounts[type]++;
+
+    const rebuilt = buildShoppingList(selectedMeals, householdSize, onHandIds, days);
     shoppingList = rebuilt.shoppingList;
     totalCost = rebuilt.totalCost;
     attempts++;

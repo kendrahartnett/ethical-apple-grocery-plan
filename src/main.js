@@ -26,6 +26,7 @@ const icons = {
   download: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 3v9m0 0 3.2-3.2M10 12 6.8 8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 14.5v.8A1.7 1.7 0 0 0 5.7 17h8.6a1.7 1.7 0 0 0 1.7-1.7v-.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   copy: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><rect x="7.2" y="7.2" width="8.8" height="8.8" rx="1.4" stroke="currentColor" stroke-width="1.5"/><path d="M12.8 7.2V5.6A1.4 1.4 0 0 0 11.4 4.2H5.6A1.4 1.4 0 0 0 4.2 5.6v5.8a1.4 1.4 0 0 0 1.4 1.4h1.6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
   share: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 3v9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="m6.8 6.2 3.2-3.2 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 10.5v3.8A1.7 1.7 0 0 0 6.2 16h7.6a1.7 1.7 0 0 0 1.7-1.7v-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  list: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M7.3 5.5h8M7.3 10h8M7.3 14.5h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="4" cy="5.5" r="1" fill="currentColor"/><circle cx="4" cy="10" r="1" fill="currentColor"/><circle cx="4" cy="14.5" r="1" fill="currentColor"/></svg>',
 };
 
 function money(value) {
@@ -180,14 +181,32 @@ function planData() {
  * and share actions on the grocery/meal plan screen. Kept as simple text
  * (no HTML) so it pastes cleanly into Notes, Messages, email, etc.
  */
+const MEAL_TYPE_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
+
+/**
+ * Splits the flat plan.meals array (breakfast, lunch, dinner, repeat) back
+ * into per-day groups of 3 for display and export.
+ */
+function chunkMealsByDay(meals) {
+  const days = [];
+  for (let i = 0; i < meals.length; i += 3) {
+    days.push(meals.slice(i, i + 3));
+  }
+  return days;
+}
+
 function buildPlanText(plan, form) {
   const lines = [];
   lines.push('Ethical Apple \u2014 Grocery Plan');
   lines.push(`${form.days} ${form.days == 1 ? 'day' : 'days'} of meals for ${form.household} ${form.household == 1 ? 'person' : 'people'} (${form.diet})`);
   lines.push('');
   lines.push('MEALS');
-  plan.meals.forEach((meal, index) => {
-    lines.push(`Day ${index + 1}: ${meal.name}`);
+  chunkMealsByDay(plan.meals).forEach((dayMeals, dayIndex) => {
+    lines.push(`Day ${dayIndex + 1}:`);
+    dayMeals.forEach(meal => {
+      const label = MEAL_TYPE_LABELS[meal.mealType];
+      lines.push(`  ${label ? label + ' - ' : ''}${meal.name}`);
+    });
   });
   lines.push('');
   lines.push('SHOPPING LIST');
@@ -246,8 +265,8 @@ function overviewView() {
       ${plan.infeasible ? `<div class="budget-warning" role="alert">${icons.info}<div><strong>Heads up:</strong> ${escapeHTML(plan.infeasibleReason)}</div></div>` : ''}
       <div class="plan-layout">
         <section class="panel meal-panel" aria-labelledby="meals-title">
-          <div class="panel-heading"><h2 id="meals-title">Meals for the week</h2><span>${plan.meals.length} selected</span></div>
-          <div class="meal-stack">${plan.meals.map((meal, index) => `<article class="day-meal"><div class="day-label">Day ${index + 1}</div><div><h3>${escapeHTML(meal.name)}</h3><p>${escapeHTML(meal.note || '')}.</p></div></article>`).join('')}</div>
+          <div class="panel-heading"><h2 id="meals-title">Meals for the week</h2><span>${state.form.days} ${state.form.days == 1 ? 'day' : 'days'} · ${plan.meals.length} meals</span></div>
+          <div class="meal-stack">${chunkMealsByDay(plan.meals).map((dayMeals, dayIndex) => `<div class="day-group"><div class="day-group-heading">Day ${dayIndex + 1}</div>${dayMeals.map(meal => `<article class="day-meal"><div class="day-label">${MEAL_TYPE_LABELS[meal.mealType] || ''}</div><div><h3>${escapeHTML(meal.name)}</h3><p>${escapeHTML(meal.note || '')}.</p></div></article>`).join('')}</div>`).join('')}</div>
         </section>
         <section class="panel shopping-panel" aria-labelledby="shopping-title">
           <div class="panel-heading"><h2 id="shopping-title">Shopping list</h2><span>illustrative estimate</span></div>
@@ -300,7 +319,7 @@ function groceriesView() {
         <div class="store-results__heading"><div><div class="section-kicker">Sample results</div><h2 id="store-results-title">Your options, sorted</h2></div><span>${sortedResults.length} example store types</span></div>
         <div class="store-results__list" aria-live="polite">
           ${sortedResults.map((store, index) => `<article class="store-result ${index === 0 ? 'store-result--top' : ''}">
-            <div class="store-result__identity"><span class="store-result__eyebrow">${index === 0 ? 'Top match for this sort' : 'Illustrative store type'}</span><h3>${escapeHTML(store.name)}</h3><p>${escapeHTML(store.detail)}</p></div>
+            <div class="store-result__identity"><span class="store-result__eyebrow">${index === 0 ? 'Top match for this sort' : 'Illustrative store type'}</span><h3>${escapeHTML(store.name)}</h3><p>${escapeHTML(store.detail)}</p><button class="store-result__list-link" type="button" data-action="overview">${icons.list}<span>My grocery list</span></button></div>
             <div class="store-result__metric"><span>Basket estimate</span><strong>${money(store.estimate)}</strong></div>
             <div class="store-result__metric"><span>Distance</span><strong>${store.distance.toFixed(1)} mi</strong><small>placeholder</small></div>
             <div class="store-result__metric"><span>Sample list fit</span><strong>${store.coveredItems} of ${itemsToBuyCount}</strong><small>placeholder</small></div>

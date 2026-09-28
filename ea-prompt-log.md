@@ -364,6 +364,37 @@ Every prompt Kendra sent while directing this project's build, logged verbatim i
 > Go ahead with all three
 > (Implemented download/copy/share buttons on the grocery/meal plan screen in src/main.js, with supporting CSS in src/styles.css. Verified with a Vite production build and a Playwright end-to-end test confirming the download file, clipboard text, and Web Share API call all work correctly.)
 
+### 51
+2026-09-28, 17:26 CT
+
+> I only see copy and download
+
+### 52
+2026-09-28, 17:30 CT
+
+> I tested on my phones browser and the Share option is there. Leave it as is.
+> (Confirmed the Share button's feature-detected behavior is working correctly as designed — no code changes made.)
+
+### 53
+2026-09-28
+
+> I want to create more meal options data, I also think making the list include 3 meals a day: breakfast, lunch, and dinner, is more realistic.
+> Clarifying question responses: How many meal templates per type? → **Medium (8–10 per type, ~26 total)**. Should meals repeat across days if a plan runs long? → **Allow repeats if needed (Recommended)**
+> (Implemented: expanded `src/data.js`'s `MEAL_TEMPLATES` from 9 untyped meals to 30, tagged with a new `mealType` field ("breakfast" | "lunch" | "dinner", 10 each), plus a new `MEAL_TYPES` export. Rewrote `generatePlan()` in `src/planLogic.js` to select one breakfast, one lunch, and one dinner per day instead of one meal per day, raised the budget floor `MIN_PER_PERSON_PER_DAY` from $1.25 to $4.50 to reflect three meals a day, and changed the over-budget substitution logic to swap in a same-type pantry-friendly meal. Updated `src/main.js`'s plan-overview screen and the downloadable/copyable/shareable plan text to group meals into per-day Breakfast/Lunch/Dinner sections instead of one meal per day. Added supporting CSS for the grouped day layout in `src/styles.css`. Verified with a Vite production build and a Playwright end-to-end test confirming 3 meals/day render and export correctly, and that the new budget floor correctly triggers the infeasible-budget warning.)
+
+### 54
+2026-09-28
+
+> We need to fix that we only need 1 loaf of bread and one pack of tortillas when meal planning for up to 5 days
+> (Implemented: added a `daysPerUnit: 5` field to the bread and tortillas entries in `src/data.js`, marking them as bulk staples that realistically cover several days per unit regardless of household size or how many meals use them. Updated `buildShoppingList()` in `src/planLogic.js` to quantify those items off the plan length (`Math.ceil(days / daysPerUnit)`) instead of summing per-meal ingredient usage, while every other item still scales normally. Verified with a Vite production build and a Playwright test confirming a 5-day, household-of-4 plan buys exactly 1 loaf of bread and 1 pack of tortillas, a 10-day plan correctly scales to 2 of each, and non-bulk items like eggs are unaffected.)
+
+### 55
+2026-09-28
+
+> On Screen 4 where the grocery store options are, I want to add a link button to the list we created on the page before next to the individual store
+> Follow-up: The button can say "My grocery list"
+> (Implemented: added a "My grocery list" link/button inside each store card on the store comparison screen (`groceriesView()` in `src/main.js`), with a small list icon, wired to the existing `data-action="overview"` navigation handler so it jumps back to the grocery/meal plan screen (screen 3). Added supporting CSS in `src/styles.css`. Verified with a Vite production build and a Playwright test confirming every store card shows the link, the label reads exactly "My grocery list", and clicking it navigates back to the plan screen.)
+
 ---
 
 *This file is appended to as the build continues. Kendra will add additional structure to this log later.*
