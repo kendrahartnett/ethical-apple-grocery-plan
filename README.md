@@ -23,7 +23,7 @@ See `mvp-plan.md` for the full problem statement, scope, and user stories.
 
 This is the currently built version: a fully working front end with **no external API calls**. All budgeting, meal-selection, and store-comparison logic is Kendra's own hand-written JavaScript, running against a controlled sample dataset (illustrative grocery prices, six Chicago-area stores, and simple meal templates). Store distance is currently a sample placeholder value — see "Future plans" below.
 
-The visual design/UI shell was generated with Loveable (a Vite-based front end); **all decision-making logic was written and tested independently, then wired into that UI** — Loveable's own built-in sample logic was replaced entirely with Kendra's own code (`src/planLogic.js` / `src/data.js`).
+The visual design/UI shell was generated with Replit (a Vite-based front end); **all decision-making logic was written and tested independently, then wired into that UI** — Replit's own built-in sample logic was replaced entirely with Kendra's own code (`src/planLogic.js` / `src/data.js`).
 
 ### Supported stores
 

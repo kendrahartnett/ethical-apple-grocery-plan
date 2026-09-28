@@ -522,6 +522,28 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   line-height: 1.45;
 }
 .estimate-disclosure svg { color: var(--orange); flex: none; }
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.plan-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--forest-900);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.plan-action-button:hover { background: var(--sage-soft); }
+.plan-action-button svg { width: 15px; height: 15px; flex: none; }
 .flow-actions {
   display: flex;
   justify-content: space-between;

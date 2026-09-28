@@ -4,7 +4,7 @@
  * All of the app's decision-making: budget math, meal selection, shopping
  * list construction, budget-fit substitution, and store comparison/sorting.
  * This is Kendra's own logic (originally written and tested as app.js
- * before the Loveable frontend arrived) — main.js only renders whatever
+ * before the Replit frontend arrived) — main.js only renders whatever
  * this module decides. No external API calls happen here in Version 1.
  */
 
@@ -213,7 +213,7 @@ export function computeStoreResults(shoppingList) {
 }
 
 /**
- * sortBy matches the data-store-sort values already used in the Loveable
+ * sortBy matches the data-store-sort values already used in the Replit
  * markup: "cost" | "distance" | "one-stop" | "balanced".
  */
 export function sortStoreResults(results, sortBy) {

@@ -23,6 +23,9 @@ const icons = {
   check: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="m4 10 4 4 8-9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   apple: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 6.9c-.9-.8-1.7-1.1-2.7-1.1-1.6 0-2.9 1.3-2.9 3.3 0 3.3 2 6.3 4.1 6.3.6 0 1-.3 1.5-.3s.9.3 1.5.3c2.1 0 4.1-3 4.1-6.3 0-2-1.3-3.3-2.9-3.3-1 0-1.8.3-2.7 1.1Z" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/><path d="M10 6.5V5.8m.2 0c.2-1.5 1.3-2.5 3-2.5-.3 1.4-1.3 2.4-3 2.5Z" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   info: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.5"/><path d="M10 9v4M10 6.6v.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  download: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 3v9m0 0 3.2-3.2M10 12 6.8 8.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 14.5v.8A1.7 1.7 0 0 0 5.7 17h8.6a1.7 1.7 0 0 0 1.7-1.7v-.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  copy: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><rect x="7.2" y="7.2" width="8.8" height="8.8" rx="1.4" stroke="currentColor" stroke-width="1.5"/><path d="M12.8 7.2V5.6A1.4 1.4 0 0 0 11.4 4.2H5.6A1.4 1.4 0 0 0 4.2 5.6v5.8a1.4 1.4 0 0 0 1.4 1.4h1.6" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  share: '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none"><path d="M10 3v9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="m6.8 6.2 3.2-3.2 3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 10.5v3.8A1.7 1.7 0 0 0 6.2 16h7.6a1.7 1.7 0 0 0 1.7-1.7v-3.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 
 function money(value) {
@@ -148,7 +151,7 @@ function setupView() {
 }
 
 /**
- * Bridges the Loveable-designed form state to Kendra's own generatePlan()
+ * Bridges the Replit-designed form state to Kendra's own generatePlan()
  * logic in planLogic.js, and caches the result for the current form values
  * so overviewView() and groceriesView() don't recompute it independently.
  */
@@ -170,6 +173,65 @@ function planData() {
   cachedPlan = plan;
   cachedPlanKey = key;
   return plan;
+}
+
+/**
+ * Plain-text rendering of the current plan, used by the download, copy,
+ * and share actions on the grocery/meal plan screen. Kept as simple text
+ * (no HTML) so it pastes cleanly into Notes, Messages, email, etc.
+ */
+function buildPlanText(plan, form) {
+  const lines = [];
+  lines.push('Ethical Apple \u2014 Grocery Plan');
+  lines.push(`${form.days} ${form.days == 1 ? 'day' : 'days'} of meals for ${form.household} ${form.household == 1 ? 'person' : 'people'} (${form.diet})`);
+  lines.push('');
+  lines.push('MEALS');
+  plan.meals.forEach((meal, index) => {
+    lines.push(`Day ${index + 1}: ${meal.name}`);
+  });
+  lines.push('');
+  lines.push('SHOPPING LIST');
+  plan.shoppingList.forEach(item => {
+    const suffix = item.pantryMatch ? '' : ` \u2014 ${money(item.estimatedCost)}`;
+    lines.push(`${item.name} \u2014 ${item.quantity}${suffix}`);
+  });
+  lines.push('');
+  lines.push(`Estimated total: ${money(plan.totalCost)} (budget: ${money(form.budget)})`);
+  if (plan.infeasible) {
+    lines.push('');
+    lines.push(`Heads up: ${plan.infeasibleReason}`);
+  }
+  lines.push('');
+  lines.push('Prices are illustrative estimates for planning, not live pricing or store quotes.');
+  return lines.join('\n');
+}
+
+const supportsShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+function downloadPlanText(text) {
+  const blob = new Blob([text], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'ethical-apple-grocery-plan.txt';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function copyPlanText(text, button) {
+  const originalLabel = button.dataset.originalLabel || button.innerHTML;
+  button.dataset.originalLabel = originalLabel;
+  try {
+    await navigator.clipboard.writeText(text);
+    button.innerHTML = 'Copied!';
+  } catch (error) {
+    button.innerHTML = 'Could not copy';
+  }
+  setTimeout(() => {
+    button.innerHTML = originalLabel;
+  }, 1800);
 }
 
 function overviewView() {
@@ -196,6 +258,11 @@ function overviewView() {
             <tfoot><tr><td colspan="2">Estimated shopping total</td><td>${money(plan.totalCost)}</td></tr></tfoot>
           </table>
           <p class="estimate-disclosure">${icons.info}<span>Prices are illustrative estimates for planning, not live pricing or store quotes. Your actual total may differ.</span></p>
+          <div class="plan-actions" role="group" aria-label="Save or share this plan">
+            <button class="plan-action-button" type="button" data-action="download-plan">${icons.download}<span>Download</span></button>
+            <button class="plan-action-button" type="button" data-action="copy-plan">${icons.copy}<span>Copy</span></button>
+            ${supportsShare ? `<button class="plan-action-button" type="button" data-action="share-plan">${icons.share}<span>Share</span></button>` : ''}
+          </div>
         </section>
       </div>
        <div class="flow-actions"><button class="back-button" type="button" data-action="edit-plan">← Back to form</button><button class="primary-button" type="button" data-action="groceries">Compare where to shop ${icons.arrow}</button></div>
@@ -262,6 +329,18 @@ function bindEvents(screen) {
   root.querySelectorAll('[data-action="groceries"]').forEach(button => button.addEventListener('click', () => navigate('groceries')));
   root.querySelectorAll('[data-action="edit-plan"]').forEach(button => button.addEventListener('click', () => navigate('setup')));
   root.querySelectorAll('[data-action="print"]').forEach(button => button.addEventListener('click', () => window.print()));
+  root.querySelectorAll('[data-action="download-plan"]').forEach(button => button.addEventListener('click', () => {
+    downloadPlanText(buildPlanText(planData(), state.form));
+  }));
+  root.querySelectorAll('[data-action="copy-plan"]').forEach(button => button.addEventListener('click', () => {
+    copyPlanText(buildPlanText(planData(), state.form), button);
+  }));
+  root.querySelectorAll('[data-action="share-plan"]').forEach(button => button.addEventListener('click', () => {
+    navigator.share({
+      title: 'Ethical Apple — Grocery Plan',
+      text: buildPlanText(planData(), state.form),
+    }).catch(() => {});
+  }));
   root.querySelectorAll('[data-action="start-over"]').forEach(button => button.addEventListener('click', () => {
     state.form = { ...defaultForm };
     state.storeSort = 'cost';

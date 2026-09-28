@@ -5,8 +5,8 @@
  * a small set of Chicago-area sample stores, and simple meal templates.
  * Nothing here calls an external API — this is the controlled dataset that
  * lets Version 1 work end to end on its own. This is Kendra's own data,
- * imported into the Loveable-generated UI (src/main.js) — it is not part
- * of what Loveable produced.
+ * imported into the Replit-generated UI (src/main.js) — it is not part
+ * of what Replit produced.
  *
  * V2 will add real geocoded coordinates + a Haversine distance calculation
  * to replace the `sampleDistanceMiles` placeholder below.

@@ -341,6 +341,29 @@ Every prompt Kendra sent while directing this project's build, logged verbatim i
 > [attached image: Ethical Apple landing page screenshot — "A GROCERY PLAN WITH A LITTLE MORE CARE." headline, "Budget First"/"Pantry Aware" callout cards, "Build My Grocery Plan"/"See How It Works" buttons]
 > Add this image to the top of my README.md doc
 
+### 47
+2026-09-28, 17:13 CT
+
+> Why do I have a vite config.js file?
+
+### 48
+2026-09-28, 17:14 CT
+
+> Let's update Loveable to Replit
+> (Clarified: only forward-facing docs/references should say Replit instead of Loveable — README.md, code comments, and the Claude Project spec sheet were updated; historical prompt-log entries describing what actually happened were left as-is.)
+
+### 49
+2026-09-28, 17:18 CT
+
+> I want to add a feature to save or download or share the grocery list that we create on screen 3. Tell me what you would do to add this to the project and have me approve this before you implement it
+> (Proposed: download-as-text, copy-to-clipboard, and native share (Web Share API), all client-side with no backend, kept to Version 1 scope.)
+
+### 50
+2026-09-28, 17:19 CT
+
+> Go ahead with all three
+> (Implemented download/copy/share buttons on the grocery/meal plan screen in src/main.js, with supporting CSS in src/styles.css. Verified with a Vite production build and a Playwright end-to-end test confirming the download file, clipboard text, and Web Share API call all work correctly.)
+
 ---
 
 *This file is appended to as the build continues. Kendra will add additional structure to this log later.*
