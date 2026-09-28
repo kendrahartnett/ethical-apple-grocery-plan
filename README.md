@@ -2,7 +2,7 @@
 
 ![Ethical Apple landing page](docs/landing-page.png)
 
-🚧 [Live Demo coming soon](vercel)
+🚧 [View Live App](ethical-apple-grocery-plan.vercel.app)
 
 A grocery budgeting and meal-planning app for Chicago residents.
 
