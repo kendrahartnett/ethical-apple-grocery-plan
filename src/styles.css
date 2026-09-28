@@ -251,6 +251,8 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .step-card p { color: var(--muted); font-size: 13px; line-height: 1.55; margin: 0; max-width: 230px; }
 .step-card--featured p { color: #fff0e7; }
 .step-scribble { position: absolute; right: 22px; bottom: 21px; font-size: 29px; color: var(--forest-500); }
+.closing-cta { display: flex; flex-direction: column; align-items: center; gap: 18px; text-align: center; margin-top: 74px; }
+.closing-cta p { font-family: Georgia, serif; font-size: 24px; letter-spacing: -.03em; color: var(--forest-950); margin: 0; }
 .home-footer { border-top: 1px solid var(--line); width: min(1180px, calc(100% - 48px)); margin: 0 auto; padding: 23px 0 34px; display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; gap: 20px; }
 .home-footer strong { color: var(--forest-900); }
 

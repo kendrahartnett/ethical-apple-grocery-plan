@@ -109,6 +109,10 @@ function homeView() {
           <article class="step-card"><div class="step-number">02 / MAKE IT FIT</div><h3>Get a flexible menu.</h3><p>A simple sample plan that makes smart overlaps instead of more work.</p><span class="step-scribble">○</span></article>
           <article class="step-card"><div class="step-number">03 / TAKE IT WITH YOU</div><h3>Shop with a short list.</h3><p>Check things off as you go. Add a forgotten favorite on the spot.</p><span class="step-scribble">✓</span></article>
         </div>
+        <div class="closing-cta">
+          <p>Ready to see your plan?</p>
+          <button class="primary-button" type="button" data-action="go-setup">Build my grocery plan ${icons.arrow}</button>
+        </div>
       </section>
     </main>
     <footer class="home-footer"><span><strong>Ethical Apple</strong> · a kinder starting point for dinner</span><span>Built for Chicago households</span></footer>
