@@ -600,11 +600,37 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .nearby-stores__heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
 .nearby-stores__heading h2 { margin: 8px 0 0; color: var(--forest-950); font-family: Georgia, serif; font-size: clamp(27px, 4vw, 36px); font-weight: 700; line-height: 1.1; }
 .nearby-stores__heading p { max-width: 285px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.sort-options { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 18px; }
+.sort-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.sort-option:hover { background: var(--sage-soft); }
+.sort-option--active { border-color: var(--forest-900); background: var(--sage-soft); }
+.sort-option__check { display: inline-flex; width: 14px; height: 14px; color: var(--forest-900); flex: none; }
+.sort-option__copy { display: flex; flex-direction: column; line-height: 1.3; }
+.sort-option__copy strong { font-size: 13px; color: var(--forest-950); }
+.sort-option__copy small { font-size: 11px; color: var(--muted); }
 .nearby-stores__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .nearby-store { padding: 22px; }
+.nearby-store--top { border-color: var(--forest-900); box-shadow: 3px 3px 0 var(--forest-950); }
 .nearby-store__area { color: var(--orange-dark); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .nearby-store h3 { margin: 11px 0 7px; color: var(--forest-900); font-family: Georgia, serif; font-size: 23px; }
 .nearby-store p { min-height: 43px; margin: 0 0 17px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.nearby-store__metrics { display: flex; gap: 18px; margin-bottom: 14px; }
+.nearby-store__metric { display: flex; flex-direction: column; gap: 2px; }
+.nearby-store__metric span { font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.nearby-store__metric strong { font-size: 18px; color: var(--forest-950); font-family: Georgia, serif; }
+.nearby-store__metric small { font-size: 10px; color: var(--muted); }
+.nearby-store__address { min-height: 0; margin: 0 0 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .nearby-store a { display: inline-flex; align-items: center; gap: 6px; color: var(--forest-900); font-size: 12px; font-weight: 800; text-decoration: none; }
 .nearby-store a:hover { text-decoration: underline; }
 .nearby-store a svg { width: 15px; height: 15px; }

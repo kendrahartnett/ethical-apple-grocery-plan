@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generatePlan, parseOnHand, AVAILABLE_MEAL_TEMPLATES } from '../src/planLogic.js';
-import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES } from '../src/data.js';
+import { generatePlan, parseOnHand, AVAILABLE_MEAL_TEMPLATES, computeStoreResults, sortStoreResults, isCheapestTooCloseToCall, PRICE_ERROR_MARGIN } from '../src/planLogic.js';
+import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES, STORES } from '../src/data.js';
 
 const baseForm = { budget: 95, householdSize: 2, days: 5, onHandIds: new Set(), pantry: {}, dietaryPreferences: [] };
 
@@ -54,4 +54,31 @@ test('the plan never exceeds the stated budget', () => {
     const plan = generatePlan({ ...baseForm, budget, days: 7, householdSize: 3 });
     if (!plan.infeasible) assert.ok(plan.totalCost <= budget, `$${plan.totalCost} exceeded $${budget} budget`);
   }
+});
+
+test('computeStoreResults returns one priced, distance-labeled result per store', () => {
+  const plan = generatePlan(baseForm);
+  const results = computeStoreResults(plan.shoppingList);
+  assert.equal(results.length, STORES.length);
+  for (const result of results) {
+    assert.ok(result.estimate > 0, `${result.name} should have a positive basket estimate`);
+    assert.ok(typeof result.distance === 'number', `${result.name} should carry a sample distance`);
+    assert.ok(result.name && result.address, `${result.name} should carry display fields`);
+  }
+});
+
+test('sortStoreResults only supports cost and distance, matching the locked scope', () => {
+  const plan = generatePlan(baseForm);
+  const results = computeStoreResults(plan.shoppingList);
+  const byCost = sortStoreResults(results, 'cost');
+  const byDistance = sortStoreResults(results, 'distance');
+  for (let i = 1; i < byCost.length; i++) assert.ok(byCost[i].estimate >= byCost[i - 1].estimate, 'cost sort should be ascending');
+  for (let i = 1; i < byDistance.length; i++) assert.ok(byDistance[i].distance >= byDistance[i - 1].distance, 'distance sort should be ascending');
+});
+
+test('a "cheapest" store is only named when the price gap clears the error margin', () => {
+  const closeCall = [{ estimate: 20 }, { estimate: 20.5 }, { estimate: 30 }];
+  const clearWinner = [{ estimate: 10 }, { estimate: 30 }, { estimate: 35 }];
+  assert.equal(isCheapestTooCloseToCall(closeCall), true, `a ${((0.5 / 20) * 100).toFixed(1)}% gap is inside the ${PRICE_ERROR_MARGIN * 100}% margin and should be suppressed`);
+  assert.equal(isCheapestTooCloseToCall(clearWinner), false, 'a wide gap should not be suppressed');
 });

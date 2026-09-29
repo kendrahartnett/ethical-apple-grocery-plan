@@ -19,8 +19,8 @@ A small website, a front-end prototype built with HTML, CSS, and JavaScript, wit
 
 ## What's in scope (be tight)
 
-- Four screens: a landing page, a budget form, a meal and grocery plan, and a store comparison.
-- Inputs: budget, household size, days to cover, and a checklist of common pantry staples already on hand.
+- 3 screens: a landing page, a budget form, a meal and grocery plan with a store comparison and distance below.
+- Inputs: budget, household size, days to cover, dietary preferences, and a checklist of common pantry staples already on hand.
 - Output: a 3-meal plan and an itemized shopping list, built by rule-based JavaScript I wrote from my own hand-made dataset of about 20 staple items.
 - Store comparison across 3 Chicago stores using labeled sample prices, sorted two ways: lowest cost and closest.
 - Safeguards tied to my failure mode: the plan is built to about 85–90% of the budget as a buffer, totals show as a price range, and the app won't name a "cheapest" store when the gap between stores is smaller than the data's likely error.

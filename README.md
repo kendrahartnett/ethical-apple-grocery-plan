@@ -30,10 +30,11 @@ Everything runs client-side in the browser — no backend, no external API calls
 - Only meal templates whose every ingredient exists in `GROCERY_ITEMS` are ever selectable — a handful of templates added during earlier work reference ingredients (e.g. ground turkey, chicken breast, salsa) that were never added to the sample dataset, so they're excluded from rotation rather than silently priced at $0. Adding matching grocery items would bring them back into use.
 - A verified pantry quantity (entered in the "Pantry quantities" section of the form) is what actually reduces the shopping list and its cost. Typing an ingredient's name in the free-text "on hand" field only helps steer which meals get picked — it never waives a purchase on its own.
 - `src/main.js` renders the UI and calls `generatePlan()` directly — no network request, no loading wait. The visual design/UI shell was generated with Replit (a Vite-based front end); all decision-making logic was written and tested independently, then wired into that UI.
+- `computeStoreResults()`/`sortStoreResults()` in `src/planLogic.js` turn the shopping list into a priced basket estimate per store, sortable by lowest cost or closest, per `scope-worksheet.md`'s locked scope. `isCheapestTooCloseToCall()` withholds a "cheapest" label when the price gap between stores is smaller than the sample data's likely error (~12.5%), so the app doesn't overstate what it can actually promise.
 
 ## Supported stores
 
-Three Chicago-area stores (ALDI, Walmart Supercenter, and Rico Fresh Market, all in/around Logan Square) are shown on the plan screen as reference locations with a map link — helpful for knowing where to shop, but this is not a live price or distance comparison. See "Future plans" below.
+Three Chicago-area stores (ALDI, Walmart Supercenter, and Rico Fresh Market, all in/around Logan Square) are compared on the plan screen using sample per-store pricing and a fixed sample distance from a Logan Square reference point. Sort by lowest estimated cost or closest store; when the top two cost estimates are within the sample data's likely error margin, the app shows a plain-language note instead of naming one "cheapest." Distances are sample straight-line placeholders, not real driving/walking distance — see "Future plans" below for the real-geocoding stretch goal.
 
 ## Project structure
 
@@ -60,7 +61,7 @@ Run locally with `npm install` then `npm run dev`, or `npm run build` / `npm run
 
 ## Future plans (not yet built)
 
-- **Real location/distance and store price comparison.** Add the free US Census Geocoder (no API key/account needed) plus a self-written Haversine formula for real straight-line distance, and bring back a store-by-store cost comparison driven by the sample dataset, sortable by cost or distance.
+- **Real location/distance.** Add the free US Census Geocoder (no API key/account needed) plus a self-written Haversine formula so store distance reflects the user's actual address instead of a fixed sample value — the store price comparison itself is already built; this is the stretch goal noted in `scope-worksheet.md`.
 - **More meal variety.** Add the currently-excluded ingredients (ground turkey, chicken breast, salsa, and others) to `GROCERY_ITEMS` with real sample prices, so the meal templates that already reference them become selectable.
 - **A link to real food-access resources** when a plan is genuinely infeasible on the given budget, pointing users toward food-assistance programs instead of just asking them to raise the budget.
 
@@ -74,12 +75,12 @@ See `mvp-plan.md` for the full phased architecture.
 
 ## Status
 
-The app is fully client-side: built, tested, and deployed to Vercel with no backend. A local Ollama + grocery-pricing-API backend was built and tested, then removed after testing showed it wasn't a good fit — see "How it works" above. Real distance and a restored store-price comparison are planned next.
+The app is fully client-side: built, tested, and deployed to Vercel with no backend. A local Ollama + grocery-pricing-API backend was built and tested, then removed after testing showed it wasn't a good fit — see "How it works" above. The store-price comparison matches `scope-worksheet.md`'s locked scope (3 stores, sample prices, 2 sort options, cheapest-suppression safeguard). Real distance is planned next.
 
 ## Security and limitations (disclosed intentionally)
 
-- Store prices shown are illustrative sample figures, not live pricing.
-- The nearby-store section shows fixed locations, not live distance or a cost comparison (see Future plans above).
+- Store prices shown are illustrative sample figures adjusted per store type, not live pricing.
+- Store distances are fixed sample values from a Logan Square reference point, not real driving/walking distance (see Future plans above).
 - Only a small set of Chicago stores and staple items are supported in this MVP.
 - A handful of meal templates are currently excluded from rotation because they reference grocery items not yet in the sample dataset (see "How it works" above) — this keeps every displayed price accurate rather than silently understating a plan's cost.
 - Dietary tags are preferences based on ingredients, not verified nutrition or allergy guidance.

@@ -71,6 +71,50 @@ export const DIETARY_PREFERENCES = [
   { key: "vegetarian", label: "Vegetarian" },
 ];
 
+// ---------------------------------------------------------------------------
+// Stores — the 3 Chicago-area stores locked in scope-worksheet.md, used for
+// the sample store-price comparison. priceMultiplier scales GROCERY_ITEMS'
+// sample prices for that store type (a discount grocer runs cheaper, a
+// full-size supercenter runs closer to average); coverage is how much of a
+// typical list that store type realistically carries in one trip;
+// sampleDistanceMiles is a fixed placeholder distance from a Logan Square
+// reference point, not a real geocoded distance (see scope-worksheet.md's
+// stretch goal for that future step). planLogic.js's computeStoreResults()
+// turns these into a priced, distance-labeled basket estimate per store.
+// ---------------------------------------------------------------------------
+export const STORES = [
+  {
+    id: "aldi",
+    name: "ALDI",
+    address: "1753 N Milwaukee Ave, Chicago, IL 60647",
+    area: "Wicker Park / Bucktown",
+    detail: "A discount grocer with more store-brand substitutions, usually the cheapest basket.",
+    priceMultiplier: 0.85,
+    coverage: 0.85,
+    sampleDistanceMiles: 1.0,
+  },
+  {
+    id: "walmart_supercenter",
+    name: "Walmart Supercenter",
+    address: "4626 W Diversey Ave, Chicago, IL 60639",
+    area: "Hermosa",
+    detail: "A full-size supercenter with the broadest one-trip coverage, at close-to-average prices.",
+    priceMultiplier: 0.97,
+    coverage: 1,
+    sampleDistanceMiles: 2.6,
+  },
+  {
+    id: "rico_fresh_market",
+    name: "Rico Fresh Market",
+    address: "3552 W Armitage Ave, Chicago, IL 60647",
+    area: "Logan Square",
+    detail: "A local grocer with strong fresh produce, less packaged-goods variety, and the shortest trip for this area.",
+    priceMultiplier: 0.9,
+    coverage: 0.75,
+    sampleDistanceMiles: 0.4,
+  },
+];
+
 export const MEAL_TEMPLATES = [
   // --- Breakfasts ---------------------------------------------------------
   {

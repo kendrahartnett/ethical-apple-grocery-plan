@@ -1,7 +1,7 @@
 import './styles.css';
 import './reference.css';
 import { DIETARY_PREFERENCES, GROCERY_ITEMS } from './data.js';
-import { generatePlan, parseOnHand } from './planLogic.js';
+import { generatePlan, parseOnHand, computeStoreResults, sortStoreResults, isCheapestTooCloseToCall } from './planLogic.js';
 
 const root = document.querySelector('#root');
 
@@ -16,6 +16,7 @@ const defaultForm = {
 
 const state = {
   form: { ...defaultForm },
+  storeSort: 'cost',
 };
 
 const icons = {
@@ -213,10 +214,9 @@ function buildShoppingListText(plan, form) {
 
 const supportsShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
-const nearbyStores = [
-  { name: 'ALDI', address: '1753 N Milwaukee Ave, Chicago, IL 60647', area: 'Wicker Park / Bucktown' },
-  { name: 'Walmart Supercenter', address: '4626 W Diversey Ave, Chicago, IL 60639', area: 'Hermosa' },
-  { name: 'Rico Fresh Market', address: '3552 W Armitage Ave, Chicago, IL 60647', area: 'Logan Square' },
+const STORE_SORT_OPTIONS = [
+  { key: 'cost', title: 'Lowest Grocery Cost', detail: 'Put the lowest estimated basket first.' },
+  { key: 'distance', title: 'Closest Store', detail: 'Put the shortest sample distance first.' },
 ];
 
 function downloadPlanText(text) {
@@ -278,11 +278,32 @@ function overviewView() {
           </div>
         </section>
       </div>
-      <section class="nearby-stores" aria-labelledby="nearby-stores-title">
-        <div class="nearby-stores__heading"><div><div class="section-kicker">Where to shop</div><h2 id="nearby-stores-title">Grocery stores in and around Logan Square</h2></div><p>Locations only. Check each store for current hours, stock, and prices.</p></div>
-        <div class="nearby-stores__grid">${nearbyStores.map(store => `<article class="panel nearby-store"><span class="nearby-store__area">${escapeHTML(store.area)}</span><h3>${escapeHTML(store.name)}</h3><p>${escapeHTML(store.address)}</p><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}" target="_blank" rel="noopener noreferrer" aria-label="Get directions to ${escapeHTML(store.name)}">Get directions ${icons.arrow}</a></article>`).join('')}</div>
+      ${(() => {
+        const storeResults = computeStoreResults(plan.shoppingList);
+        const sortedResults = sortStoreResults(storeResults, state.storeSort);
+        const suppressCheapest = state.storeSort === 'cost' && isCheapestTooCloseToCall(storeResults);
+        return `<section class="nearby-stores" aria-labelledby="nearby-stores-title">
+        <div class="nearby-stores__heading"><div><div class="section-kicker">Where to shop</div><h2 id="nearby-stores-title">Compare nearby Chicago stores</h2></div><p>Sample basket estimates for this plan. Check each store for current hours, stock, and prices.</p></div>
+        <div class="sort-options" role="group" aria-label="Sort store results">
+          ${STORE_SORT_OPTIONS.map(option => `<button class="sort-option ${state.storeSort === option.key ? 'sort-option--active' : ''}" type="button" data-store-sort="${option.key}" aria-pressed="${state.storeSort === option.key}"><span class="sort-option__check" aria-hidden="true">${state.storeSort === option.key ? icons.check : ''}</span><span class="sort-option__copy"><strong>${escapeHTML(option.title)}</strong><small>${escapeHTML(option.detail)}</small></span></button>`).join('')}
+        </div>
+        <div class="nearby-stores__grid">${sortedResults.map((store, index) => {
+          const isTop = index === 0;
+          const showCheapestLabel = isTop && state.storeSort === 'cost' && !suppressCheapest;
+          const eyebrow = isTop ? (state.storeSort === 'cost' ? (showCheapestLabel ? 'Lowest estimate' : 'Close estimates — see note below') : 'Closest store') : store.area;
+          return `<article class="panel nearby-store ${isTop ? 'nearby-store--top' : ''}"><span class="nearby-store__area">${escapeHTML(eyebrow)}</span><h3>${escapeHTML(store.name)}</h3><p>${escapeHTML(store.detail)}</p>
+            <div class="nearby-store__metrics">
+              <div class="nearby-store__metric"><span>Basket estimate</span><strong>${moneyRange(store.estimate)}</strong></div>
+              <div class="nearby-store__metric"><span>Distance</span><strong>${store.distance.toFixed(1)} mi</strong><small>sample, straight-line</small></div>
+            </div>
+            <p class="nearby-store__address">${escapeHTML(store.address)}</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}" target="_blank" rel="noopener noreferrer" aria-label="Get directions to ${escapeHTML(store.name)}">Get directions ${icons.arrow}</a>
+          </article>`;
+        }).join('')}</div>
+        <p class="estimate-disclosure">${icons.info}<span>Basket estimates use this plan's sample prices with a per-store adjustment; distances are fixed sample values, not real geocoded distance.${suppressCheapest ? ' The lowest two estimates are close enough that calling one "cheapest" would overstate what this sample data can support.' : ''}</span></p>
       </section>
-       <div class="flow-actions"><button class="back-button" type="button" data-action="edit-plan">← Back to form</button></div>`}
+       <div class="flow-actions"><button class="back-button" type="button" data-action="edit-plan">← Back to form</button></div>`;
+      })()}`}
     </main>
   </div>`;
 }
@@ -314,8 +335,14 @@ function bindEvents(screen) {
   }));
   root.querySelectorAll('[data-action="start-over"]').forEach(button => button.addEventListener('click', () => {
     state.form = { ...defaultForm, dietaryPreferences: [...defaultForm.dietaryPreferences] };
+    state.storeSort = 'cost';
     cachedPlan = null;
     navigate('home');
+  }));
+  root.querySelectorAll('[data-store-sort]').forEach(button => button.addEventListener('click', () => {
+    state.storeSort = button.dataset.storeSort;
+    render();
+    root.querySelector(`[data-store-sort="${state.storeSort}"]`)?.focus();
   }));
 
   const setupForm = root.querySelector('#setup-form');
@@ -339,6 +366,7 @@ function bindEvents(screen) {
         pantry: state.form.pantry,
         dietaryPreferences: state.form.dietaryPreferences,
       });
+      state.storeSort = 'cost';
       navigate('overview');
     });
   }

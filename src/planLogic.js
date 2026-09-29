@@ -9,7 +9,7 @@
  * browser, so the app can be deployed as a static site with no server.
  */
 
-import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES } from "./data.js";
+import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES, STORES } from "./data.js";
 
 // Roughly $1.30 (breakfast) + $1.30 (lunch) + $1.90 (dinner) per person per
 // day is the floor for even the cheapest staples across three meals a day.
@@ -293,6 +293,74 @@ export function generatePlan({ budget, householdSize, days, onHandIds = new Set(
   }
 
   return { meals: selectedMeals, shoppingList, totalCost, infeasible: false, infeasibleReason: null };
+}
+
+// ---------------------------------------------------------------------------
+// Store comparison (scope-worksheet.md: 3 Chicago stores, sample prices,
+// sorted two ways -- lowest cost and closest). sampleDistanceMiles is a
+// fixed placeholder, not a real geocoded distance; that's the stretch goal
+// noted in scope-worksheet.md, not part of this MVP.
+// ---------------------------------------------------------------------------
+export function computeStoreResults(shoppingList) {
+  return STORES.map((store) => {
+    const estimate = shoppingList.reduce((sum, line) => {
+      if (line.pantryMatch) return sum;
+      const item = GROCERY_ITEMS.find((g) => g.id === line.itemId);
+      if (!item) return sum;
+      return sum + item.price * store.priceMultiplier * line.qty;
+    }, 0);
+
+    const itemsToBuy = shoppingList.filter((line) => !line.pantryMatch).length;
+
+    return {
+      storeId: store.id,
+      name: store.name,
+      address: store.address,
+      area: store.area,
+      detail: store.detail,
+      estimate,
+      distance: store.sampleDistanceMiles,
+      coveredItems: Math.round(itemsToBuy * store.coverage),
+      itemsToBuy,
+    };
+  });
+}
+
+/**
+ * sortBy matches the data-store-sort values used in main.js: "cost" |
+ * "distance". Scope-worksheet.md caps store sorting at these two options --
+ * "one-stop" and "balanced" sorting are deliberately out of scope.
+ */
+export function sortStoreResults(results, sortBy) {
+  const sorted = results.slice();
+  switch (sortBy) {
+    case "distance":
+      return sorted.sort((a, b) => a.distance - b.distance || a.estimate - b.estimate);
+    case "cost":
+    default:
+      return sorted.sort((a, b) => a.estimate - b.estimate);
+  }
+}
+
+// Real prices are only estimated, so a lead this small is noise, not a
+// trustworthy "cheapest" claim. Matches scope-worksheet.md's safeguard:
+// don't name a cheapest store when the gap between stores is smaller than
+// the data's likely error (the same ~12.5% margin used for the displayed
+// price ranges).
+export const PRICE_ERROR_MARGIN = 0.125;
+
+/**
+ * True when the lowest-cost store's estimate isn't clearly ahead of the
+ * next cheapest one -- i.e. the gap is within the likely pricing error, so
+ * calling it "cheapest" would overstate what the sample data can support.
+ */
+export function isCheapestTooCloseToCall(results) {
+  if (results.length < 2) return false;
+  const sortedByCost = results.slice().sort((a, b) => a.estimate - b.estimate);
+  const [lowest, nextLowest] = sortedByCost;
+  if (lowest.estimate <= 0) return false;
+  const gap = (nextLowest.estimate - lowest.estimate) / lowest.estimate;
+  return gap < PRICE_ERROR_MARGIN;
 }
 
 // ---------------------------------------------------------------------------

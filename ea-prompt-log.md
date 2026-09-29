@@ -247,4 +247,34 @@ Testing the local Ollama backend surfaced real problems, leading to a scope deci
 
 ---
 
+### Phase 13 — Demo Prep (#77)
+Capturing a reflective talking point for Thursday's demo, explaining the reasoning behind the Ollama removal (Phase 12) as a deliberate responsible-AI scope decision.
+
+**#77** (2026-09-29, 15:58 CT) — Asked to add a "Responsible AI Scope Decision" write-up to her demo prep sheet for Thursday, reflecting on why AI/Ollama was removed from this version in favor of predictable, deterministic logic, while keeping AI as a future possibility with added validation and guardrails. No demo prep sheet existed yet in the Claude Project, so a new doc (`gate1-week3-demo-prep.md`) was created there to hold it, verbatim, as its first talking point. No code changes.
+
+---
+
+### Phase 14 — Store Comparison Restoration (#78–79)
+Fixing the gap between the locked scope-worksheet.md store-comparison feature and what had actually shipped, then correcting its visual design to match the rest of the app.
+
+**#78** (2026-09-29, 16:16 CT) — Gave a 5-item priority list for the day: fix the scope mismatch, log the outside-tool prompts, re-test the #76 fixes, a code walkthrough, and the demo script. Investigating the first item found that scope-worksheet.md's locked store-comparison feature (3 stores, sample prices, 2 sort options, budget-buffer/cheapest-suppression safeguards) was missing from the shipped app -- it had been quietly replaced with a static location list, no pricing or sorting, likely during the "merge screen 3/4" work bundled into the same commit as the Ollama backend. Chose to rebuild the feature (recovered the original `computeStoreResults`/`sortStoreResults`/`isCheapestTooCloseToCall` logic from git history) rather than de-scope the docs. Added a `STORES` dataset (per-store price multiplier, coverage, sample distance) to `src/data.js`; restored the comparison functions to `src/planLogic.js`; rewired `src/main.js`'s store section with sort-toggle buttons and priced basket estimates; added 3 new tests (10/10 passing) and confirmed a clean build; updated `README.md` to remove the previously-flagged gap.
+
+**#79** (2026-09-29, 16:39 CT) — Flagged that the new store-comparison section didn't visually match the rest of the page. Used a local Vite preview and Playwright screenshots to diagnose rather than guess: `reference.css`'s `.ea-ref` design-system overrides (Barlow Condensed headings, IBM Plex Mono labels, hard black borders/shadows, orange accents) had never been extended to the store section, so it rendered in the softer base theme. Added the missing overrides for the heading, sort buttons, and store cards/metrics to match exactly, verified with before/after screenshots, and confirmed the build still succeeds.
+
+---
+
+### Phase 15 — Outside-Tool Prompts (#80)
+Backfilling the prompts run in OpenAI's Codex during the Ollama/backend build (entries #59–76), per Kendra's request to keep the Fluency/Control log complete.
+
+**#80** (2026-09-29, 16:39 CT) — Pasted 12 verbatim Codex prompts covering the full arc of the now-removed Ollama backend: connecting a local Ollama model securely, writing and iterating the meal-generation prompt (budget rules, variety, prep ideas, the under-$10 oil/seasoning exclusion), wiring in and then abandoning the Open Price Engine API and Trader Joe's/store pricing in favor of self-collected sample prices, selecting the llama3 model, building a loading modal, adding the nearby-stores list (ALDI/Walmart/Rico Fresh Market), scoping the download/copy/share text to just the list and total, questioning why the LLM's output wasn't actually being used over the rule-based data, asking about Vercel deployment with a local model running, and generating the 10 new meal templates that entry #76 later found referenced ingredients never added to `GROCERY_ITEMS`. Logged verbatim in the Claude Project's `gate1-week3-full-prompts.md` as entry #80; documentation only, no code changes.
+
+---
+
+### Phase 16 — Code Walkthrough (#81)
+Preparing a code-walkthrough reference for the demo, explicitly highlighting the budget-buffer logic.
+
+**#81** (2026-09-29, 17:05 CT) — Asked to start the code walkthrough, specifically asking that the budget buffer be highlighted. Created a new Claude Project doc, `gate1-week3-code-walkthrough.md`, covering a suggested walkthrough order, an architecture overview, and a section-by-section tour of `data.js`, `planLogic.js`, `main.js`, and `tests/planLogic.test.js`, with a dedicated “⭐ The budget buffer — what to highlight” subsection quoting the exact lines (`BUDGET_BUFFER_FRACTION = 0.875` at line 21, `targetBudget = budget * BUDGET_BUFFER_FRACTION` at line 144) and explaining its three usages: the upgrade pass (line 213, stops at line 224 once `totalCost >= targetBudget`), the over-budget substitution loop (line 255), and the final hard-infeasibility check, which uses the full `budget` rather than `targetBudget` as the absolute ceiling. No code changes.
+
+---
+
 *This file is the canonical, organized prompt log for this repo. New prompts are logged verbatim first (in the Claude Project's `gate1-week3-full-prompts.md`), then reflected here under the appropriate phase and, where relevant, the highlight sections above.*
