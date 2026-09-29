@@ -1,22 +1,21 @@
 /**
  * data.js — Ethical Apple (Version 1)
  *
- * All the "facts" the app runs on: staple grocery items with sample prices,
- * a small set of Chicago-area sample stores, and simple meal templates.
+ * All the "facts" the app runs on: staple grocery items with editable sample
+ * prices and simple meal templates.
  * Nothing here calls an external API — this is the controlled dataset that
  * lets Version 1 work end to end on its own. This is Kendra's own data,
  * imported into the Replit-generated UI (src/main.js) — it is not part
  * of what Replit produced.
  *
- * V2 will add real geocoded coordinates + a Haversine distance calculation
- * to replace the `sampleDistanceMiles` placeholder below.
- * V3 will add an LLM meal-idea step that is only ever allowed to choose from
- * the GROCERY_ITEMS ingredient names defined here.
+ * The local Ollama planner can create meals from these ingredients. This
+ * catalog supplies the prices used to verify its shopping list and budget.
  */
 
 // ---------------------------------------------------------------------------
 // Grocery items — id, display name, unit, sample price per unit, tags.
-// Prices are illustrative/sample figures, not live store prices.
+// Prices are illustrative sample figures. Replace them with researched USD
+// prices for these exact units before making stronger budget claims.
 // ---------------------------------------------------------------------------
 export const GROCERY_ITEMS = [
   { id: "rice", name: "Rice", unit: "lb", price: 0.89, tags: ["vegetarian", "pantry"] },
@@ -175,21 +174,7 @@ export const MEAL_TEMPLATES = [
       { itemId: "cheese", qtyPerPerson: 0.08 },
     ],
   },
-  {
-    id: "garlic_home_fries",
-    name: "Garlic Herb Home Fries",
-    mealType: "breakfast",
-    note: "a simple skillet side that also works as a full plate",
-    vegetarian: true,
-    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly", "under30"],
-    prepMinutes: 20,
-    pantryFriendly: true,
-    ingredients: [
-      { itemId: "potatoes", qtyPerPerson: 0.35 },
-      { itemId: "garlic", qtyPerPerson: 0.15 },
-      { itemId: "cooking_oil", qtyPerPerson: 0.05 },
-    ],
-  },
+ 
   {
     id: "peanut_butter_oat_bowl",
     name: "Peanut Butter Oat Bowl",
@@ -205,21 +190,7 @@ export const MEAL_TEMPLATES = [
       { itemId: "bananas", qtyPerPerson: 0.5 },
     ],
   },
-  {
-    id: "cheese_toast",
-    name: "Cheese Toast",
-    mealType: "breakfast",
-    note: "a quick melt when mornings are short on time",
-    vegetarian: true,
-    dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
-    prepMinutes: 8,
-    pantryFriendly: true,
-    ingredients: [
-      { itemId: "bread", qtyPerPerson: 0.25 },
-      { itemId: "cheese", qtyPerPerson: 0.12 },
-      { itemId: "cooking_oil", qtyPerPerson: 0.02 },
-    ],
-  },
+ 
 
   // --- Lunches -------------------------------------------------------------
   {
@@ -234,6 +205,21 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.25 },
       { itemId: "peanut_butter", qtyPerPerson: 0.15 },
+    ],
+  },
+   {
+    id: "garlic_home_fries",
+    name: "Garlic Herb Home Fries",
+    mealType: "breakfast",
+    note: "a simple skillet side that also works as a full plate",
+    vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 20,
+    pantryFriendly: true,
+    ingredients: [
+      { itemId: "potatoes", qtyPerPerson: 0.35 },
+      { itemId: "garlic", qtyPerPerson: 0.15 },
+      { itemId: "cooking_oil", qtyPerPerson: 0.05 },
     ],
   },
   {
@@ -310,6 +296,21 @@ export const MEAL_TEMPLATES = [
       { itemId: "beans", qtyPerPerson: 0.4 },
       { itemId: "onion", qtyPerPerson: 0.1 },
       { itemId: "cooking_oil", qtyPerPerson: 0.04 },
+    ],
+  },
+   {
+    id: "cheese_toast",
+    name: "Grilled Cheese Sandwiches",
+    mealType: "lunch",
+    note: "a quick melt when lunches are short on time",
+    vegetarian: true,
+    dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
+    prepMinutes: 8,
+    pantryFriendly: true,
+    ingredients: [
+      { itemId: "bread", qtyPerPerson: 0.25 },
+      { itemId: "cheese", qtyPerPerson: 0.12 },
+      { itemId: "cooking_oil", qtyPerPerson: 0.02 },
     ],
   },
   {
@@ -394,7 +395,7 @@ export const MEAL_TEMPLATES = [
   },
   {
     id: "pasta_with_sauce",
-    name: "Pasta with Tomato Sauce",
+    name: "Spaghetti with Sauce",
     mealType: "dinner",
     note: "a quick, budget-friendly dinner with just a few ingredients",
     vegetarian: true,
@@ -534,6 +535,184 @@ export const MEAL_TEMPLATES = [
       { itemId: "cooking_oil", qtyPerPerson: 0.04 },
     ],
   },
+  {
+  id: "ground_turkey_tacos",
+  name: "Ground Turkey Tacos",
+  mealType: "dinner",
+  note: "seasoned ground turkey tacos with beans, cheese, and fresh toppings",
+  vegetarian: false,
+  dietaryTags: ["highProtein", "budgetFriendly", "under30"],
+  prepMinutes: 25,
+  pantryFriendly: true,
+  ingredients: [
+    { itemId: "ground_turkey", qtyPerPerson: 0.3 },
+    { itemId: "tortillas", qtyPerPerson: 0.25 },
+    { itemId: "black_beans", qtyPerPerson: 0.2 },
+    { itemId: "shredded_cheese", qtyPerPerson: 0.1 },
+    { itemId: "lettuce", qtyPerPerson: 0.1 },
+    { itemId: "salsa", qtyPerPerson: 0.08 },
+  ],
+},
+
+{
+  id: "frozen_pizza_and_salad",
+  name: "Frozen Pizza and Side Salad",
+  mealType: "dinner",
+  note: "an easy pizza night balanced with a simple fresh salad",
+  vegetarian: true,
+  dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
+  prepMinutes: 20,
+  pantryFriendly: false,
+  ingredients: [
+    { itemId: "frozen_pizza", qtyPerPerson: 0.5 },
+    { itemId: "salad_mix", qtyPerPerson: 0.2 },
+    { itemId: "salad_dressing", qtyPerPerson: 0.05 },
+  ],
+},
+
+{
+  id: "chicken_caesar_salad",
+  name: "Chicken Caesar Salad",
+  mealType: "lunch",
+  note: "a fresh, protein-packed salad with chicken and crunchy greens",
+  vegetarian: false,
+  dietaryTags: ["highProtein", "under30"],
+  prepMinutes: 20,
+  pantryFriendly: false,
+  ingredients: [
+    { itemId: "chicken_breast", qtyPerPerson: 0.3 },
+    { itemId: "romaine_lettuce", qtyPerPerson: 0.25 },
+    { itemId: "caesar_dressing", qtyPerPerson: 0.06 },
+    { itemId: "parmesan_cheese", qtyPerPerson: 0.05 },
+    { itemId: "croutons", qtyPerPerson: 0.08 },
+  ],
+},
+
+{
+  id: "turkey_burger_and_potatoes",
+  name: "Turkey Burgers and Roasted Potatoes",
+  mealType: "dinner",
+  note: "a filling turkey burger served with crispy seasoned potatoes",
+  vegetarian: false,
+  dietaryTags: ["highProtein", "budgetFriendly"],
+  prepMinutes: 30,
+  pantryFriendly: true,
+  ingredients: [
+    { itemId: "ground_turkey", qtyPerPerson: 0.3 },
+    { itemId: "burger_buns", qtyPerPerson: 0.2 },
+    { itemId: "potatoes", qtyPerPerson: 0.35 },
+    { itemId: "lettuce", qtyPerPerson: 0.08 },
+    { itemId: "cheese", qtyPerPerson: 0.08 },
+    { itemId: "cooking_oil", qtyPerPerson: 0.03 },
+  ],
+},
+
+{
+  id: "chicken_quesadillas",
+  name: "Chicken Quesadillas",
+  mealType: "dinner",
+  note: "crispy cheesy quesadillas filled with seasoned chicken and beans",
+  vegetarian: false,
+  dietaryTags: ["highProtein", "budgetFriendly", "under30"],
+  prepMinutes: 20,
+  pantryFriendly: true,
+  ingredients: [
+    { itemId: "chicken_breast", qtyPerPerson: 0.25 },
+    { itemId: "tortillas", qtyPerPerson: 0.3 },
+    { itemId: "shredded_cheese", qtyPerPerson: 0.12 },
+    { itemId: "black_beans", qtyPerPerson: 0.15 },
+    { itemId: "salsa", qtyPerPerson: 0.08 },
+  ],
+},
+
+{
+  id: "greek_yogurt_parfait",
+  name: "Greek Yogurt Parfait",
+  mealType: "breakfast",
+  note: "creamy Greek yogurt layered with fruit, granola, and peanut butter",
+  vegetarian: true,
+  dietaryTags: ["vegetarian", "highProtein", "under30"],
+  prepMinutes: 5,
+  pantryFriendly: false,
+  ingredients: [
+    { itemId: "greek_yogurt", qtyPerPerson: 0.3 },
+    { itemId: "granola", qtyPerPerson: 0.12 },
+    { itemId: "banana", qtyPerPerson: 0.2 },
+    { itemId: "peanut_butter", qtyPerPerson: 0.05 },
+  ],
+},
+
+{
+  id: "turkey_pasta",
+  name: "Turkey and Tomato Pasta",
+  mealType: "dinner",
+  note: "a hearty pasta tossed with ground turkey and tomato sauce",
+  vegetarian: false,
+  dietaryTags: ["highProtein", "budgetFriendly", "under30"],
+  prepMinutes: 25,
+  pantryFriendly: true,
+  ingredients: [
+    { itemId: "ground_turkey", qtyPerPerson: 0.25 },
+    { itemId: "pasta", qtyPerPerson: 0.25 },
+    { itemId: "pasta_sauce", qtyPerPerson: 0.2 },
+    { itemId: "parmesan_cheese", qtyPerPerson: 0.05 },
+    { itemId: "cooking_oil", qtyPerPerson: 0.02 },
+  ],
+},
+
+{
+  id: "loaded_baked_potato",
+  name: "Loaded Chicken Baked Potato",
+  mealType: "dinner",
+  note: "a baked potato loaded with chicken, broccoli, and melted cheese",
+  vegetarian: false,
+  dietaryTags: ["highProtein", "budgetFriendly"],
+  prepMinutes: 30,
+  pantryFriendly: true,
+  ingredients: [
+    { itemId: "potatoes", qtyPerPerson: 0.4 },
+    { itemId: "chicken_breast", qtyPerPerson: 0.25 },
+    { itemId: "broccoli", qtyPerPerson: 0.2 },
+    { itemId: "shredded_cheese", qtyPerPerson: 0.1 },
+    { itemId: "greek_yogurt", qtyPerPerson: 0.06 },
+  ],
+},
+
+{
+  id: "tuna_melt",
+  name: "Tuna Melt",
+  mealType: "lunch",
+  note: "a warm cheesy tuna sandwich that's quick, filling, and protein-rich",
+  vegetarian: false,
+  dietaryTags: ["highProtein", "budgetFriendly", "under30"],
+  prepMinutes: 15,
+  pantryFriendly: true,
+  ingredients: [
+    { itemId: "tuna", qtyPerPerson: 0.2 },
+    { itemId: "bread", qtyPerPerson: 0.25 },
+    { itemId: "cheese", qtyPerPerson: 0.08 },
+    { itemId: "mayonnaise", qtyPerPerson: 0.04 },
+  ],
+},
+
+{
+  id: "black_bean_burrito_bowl",
+  name: "Black Bean Burrito Bowl",
+  mealType: "lunch",
+  note: "a colorful rice bowl with seasoned beans, vegetables, salsa, and cheese",
+  vegetarian: true,
+  dietaryTags: ["vegetarian", "budgetFriendly", "highProtein", "under30"],
+  prepMinutes: 20,
+  pantryFriendly: true,
+  ingredients: [
+    { itemId: "black_beans", qtyPerPerson: 0.3 },
+    { itemId: "rice", qtyPerPerson: 0.25 },
+    { itemId: "corn", qtyPerPerson: 0.12 },
+    { itemId: "shredded_cheese", qtyPerPerson: 0.08 },
+    { itemId: "salsa", qtyPerPerson: 0.08 },
+    { itemId: "lettuce", qtyPerPerson: 0.08 },
+  ],
+},
 
   // --- Added for the Dietary Preferences checklist -------------------------
   {
@@ -583,7 +762,7 @@ export const MEAL_TEMPLATES = [
     ],
   },
 
-  // --- Added after a live-price comparison test showed generous budgets ----
+  // --- Additional sample ingredients for varied meal plans ----
   // --- weren't being used up; these give high-protein plans real headroom -
   {
     id: "greek_yogurt_protein_bowl",
@@ -632,42 +811,3 @@ export const MEAL_TEMPLATES = [
   },
 ];
 // ---------------------------------------------------------------------------
-// Sample Chicago stores. `sampleDistanceMiles` is a placeholder used only in
-// Version 1; Version 2 replaces it with a real Haversine calculation off
-// geocoded coordinates. `priceMultiplier` nudges the same base grocery
-// prices up/down per store, and `coverage` is a sample fraction of the
-// shopping list this store type is assumed to carry — both are
-// illustrative, not live retailer data.
-// ---------------------------------------------------------------------------
-// Scope worksheet caps this at 3 Chicago stores. Kept: a discount grocer, a
-// full-service chain, and a local market, to preserve variety across price
-// point and coverage while trimming from the earlier 6-store list.
-export const STORES = [
-  {
-    id: "aldi_logan_square",
-    name: "Aldi (Logan Square)",
-    address: "2515 N Milwaukee Ave, Chicago, IL",
-    detail: "A sample discount grocer with more store-brand substitutions.",
-    priceMultiplier: 0.85,
-    coverage: 0.8,
-    sampleDistanceMiles: 1.0,
-  },
-  {
-    id: "jewel_osco_lincoln_park",
-    name: "Jewel-Osco (Lincoln Park)",
-    address: "1341 W Fullerton Ave, Chicago, IL",
-    detail: "A full-service sample grocer with the broadest list coverage.",
-    priceMultiplier: 1.05,
-    coverage: 1,
-    sampleDistanceMiles: 2.4,
-  },
-  {
-    id: "rico_fresh_market",
-    name: "Rico Fresh Market",
-    address: "3552 W. Armitage Ave, Chicago, IL 60647",
-    detail: "A sample local grocer with strong fresh produce and meat, less packaged-goods variety.",
-    priceMultiplier: 0.88,
-    coverage: 0.7,
-    sampleDistanceMiles: 0.5,
-  },
-];

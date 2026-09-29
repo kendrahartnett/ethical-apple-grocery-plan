@@ -2,13 +2,14 @@
  * planLogic.js — Ethical Apple (Version 1)
  *
  * All of the app's decision-making: budget math, meal selection, shopping
- * list construction, budget-fit substitution, and store comparison/sorting.
+ * list construction and budget-fit substitution. This is legacy Version 1
+ * client logic; the active local planner lives in server/planner.js.
  * This is Kendra's own logic (originally written and tested as app.js
  * before the Replit frontend arrived) — main.js only renders whatever
  * this module decides. No external API calls happen here in Version 1.
  */
 
-import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES, STORES } from "./data.js";
+import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES } from "./data.js";
 
 // Roughly $1.30 (breakfast) + $1.30 (lunch) + $1.90 (dinner) per person per
 // day is the floor for even the cheapest staples across three meals a day.
@@ -268,69 +269,3 @@ export function generatePlan({ budget, householdSize, days, onHandIds, dietaryPr
 }
 
 // ---------------------------------------------------------------------------
-// Store comparison (Version 1 — sample distance; Version 2 will replace
-// sampleDistanceMiles with a real Haversine calculation from geocoded
-// coordinates).
-// ---------------------------------------------------------------------------
-export function computeStoreResults(shoppingList) {
-  return STORES.map((store) => {
-    const estimate = shoppingList.reduce((sum, line) => {
-      if (line.pantryMatch) return sum;
-      const item = GROCERY_ITEMS.find((g) => g.id === line.itemId);
-      if (!item) return sum;
-      return sum + item.price * store.priceMultiplier * line.qty;
-    }, 0);
-
-    const itemsToBuy = shoppingList.filter((line) => !line.pantryMatch).length;
-
-    return {
-      storeId: store.id,
-      name: store.name,
-      address: store.address,
-      detail: store.detail,
-      estimate,
-      // Placeholder in V1. V2 replaces this with real Haversine distance.
-      distance: store.sampleDistanceMiles,
-      coveredItems: Math.round(itemsToBuy * store.coverage),
-    };
-  });
-}
-
-/**
- * sortBy matches the data-store-sort values used in the markup: "cost" |
- * "distance". The scope worksheet caps store sorting at these two options
- * ("lowest cost" and "closest") — one-stop and balanced sorting are
- * deliberately out of scope.
- */
-export function sortStoreResults(results, sortBy) {
-  const sorted = results.slice();
-
-  switch (sortBy) {
-    case "distance":
-      return sorted.sort((a, b) => a.distance - b.distance || a.estimate - b.estimate);
-    case "cost":
-    default:
-      return sorted.sort((a, b) => a.estimate - b.estimate);
-  }
-}
-
-// Real prices are only estimated, so a lead this small is noise, not a
-// trustworthy "cheapest" claim. Matches the scope worksheet's Manage
-// safeguard: don't name a cheapest store when the gap between stores is
-// smaller than the data's likely error (the same ~12.5% margin used for the
-// displayed price ranges).
-export const PRICE_ERROR_MARGIN = 0.125;
-
-/**
- * True when the lowest-cost store's estimate isn't clearly ahead of the
- * next cheapest one -- i.e. the gap is within the likely pricing error, so
- * calling it "cheapest" would overstate what the sample data can support.
- */
-export function isCheapestTooCloseToCall(results) {
-  if (results.length < 2) return false;
-  const sortedByCost = results.slice().sort((a, b) => a.estimate - b.estimate);
-  const [lowest, nextLowest] = sortedByCost;
-  if (lowest.estimate <= 0) return false;
-  const gap = (nextLowest.estimate - lowest.estimate) / lowest.estimate;
-  return gap < PRICE_ERROR_MARGIN;
-}

@@ -83,8 +83,6 @@
 .ea-ref .hero-title,
 .ea-ref .page-heading h1,
 .ea-ref .story-title,
-.ea-ref .store-results__heading h2,
-.ea-ref .store-result__identity h3,
 .ea-ref .step-card h3 {
   color: var(--ea-ink);
   font-family: "Barlow Condensed", Impact, "Arial Narrow", sans-serif;
@@ -245,9 +243,7 @@
 }
 .ea-ref .home-footer strong { color: var(--ea-ink); }
 
-/* Screen 4 uses an editorial comparison layout; its data and sort behavior stay in main.js. */
 .ea-ref .app-main { padding: 54px 0 75px; }
-.ea-ref .comparison-intro { margin-bottom: 24px; }
 .ea-ref .page-heading { max-width: 730px; }
 .ea-ref .page-heading h1 {
   margin: 13px 0 12px;
@@ -256,117 +252,11 @@
   letter-spacing: -.015em;
 }
 .ea-ref .page-heading p { max-width: 640px; color: var(--ea-muted); font-size: 15px; line-height: 1.65; }
-.ea-ref .sort-options {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 17px 20px;
-  margin: 29px 0 42px;
-}
-.ea-ref .sort-option {
-  min-height: 148px;
-  padding: 20px 22px;
-  align-items: flex-start;
-  gap: 17px;
-  border: 2px solid var(--ea-ink);
-  border-radius: 0;
-  background: var(--ea-paper-light);
-  box-shadow: 5px 5px 0 var(--ea-ink);
-  color: var(--ea-ink);
-  position: relative;
-  transition: transform .16s ease, box-shadow .16s ease;
-}
-.ea-ref .sort-option:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--ea-ink); }
-.ea-ref .sort-option--active {
-  border-color: var(--ea-ink);
-  background: #e4e6c4;
-  color: var(--ea-ink);
-  box-shadow: 5px 5px 0 var(--ea-ink);
-}
-.ea-ref .sort-option__check {
-  width: 43px;
-  height: 33px;
-  flex: 0 0 43px;
-  border: 2px solid var(--ea-ink);
-  border-radius: 0;
-  background: var(--ea-orange);
-  color: var(--ea-paper-light);
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 13px;
-  font-weight: 700;
-}
-.ea-ref .sort-option__check svg { width: 15px; height: 15px; }
-.ea-ref .sort-option__copy { gap: 8px; }
-.ea-ref .sort-option__copy strong {
-  font-family: "Barlow Condensed", Impact, "Arial Narrow", sans-serif;
-  font-size: 25px;
-  line-height: .98;
-  letter-spacing: .025em;
-  text-transform: uppercase;
-}
-.ea-ref .sort-option__copy small,
-.ea-ref .sort-option--active .sort-option__copy small { color: var(--ea-muted); font-size: 12px; line-height: 1.5; }
-.ea-ref .store-results__heading {
-  align-items: end;
-  padding-bottom: 13px;
-  border-bottom: 2px solid var(--ea-ink);
-}
-.ea-ref .store-results__heading h2 { margin: 7px 0 0; font-size: 37px; line-height: .95; letter-spacing: .01em; }
-.ea-ref .store-results__heading > span {
-  padding: 6px 9px;
-  color: var(--ea-ink);
-  border: 1px solid var(--ea-ink);
-  background: var(--ea-orange-light);
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 9px;
-  text-transform: uppercase;
-}
-.ea-ref .store-results__list { gap: 12px; margin-top: 16px; }
-.ea-ref .store-result {
-  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(105px, .72fr));
-  gap: 18px;
-  padding: 17px 20px;
-  border: 1.5px solid var(--ea-ink);
-  border-radius: 0;
-  background: var(--ea-paper-light);
-  box-shadow: 3px 3px 0 var(--ea-ink);
-}
-.ea-ref .store-result--top { border: 2px solid var(--ea-ink); box-shadow: 5px 5px 0 var(--ea-orange-light); }
-.ea-ref .store-result__eyebrow,
-.ea-ref .store-result__metric > span { font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: .08em; }
-.ea-ref .store-result__eyebrow { color: var(--ea-orange); }
-.ea-ref .store-result__identity h3 { margin: 6px 0 4px; font-size: 25px; letter-spacing: .01em; }
-.ea-ref .store-result__identity p { color: var(--ea-muted); font-size: 11px; line-height: 1.5; }
-.ea-ref .store-result__metric { gap: 4px; }
-.ea-ref .store-result__metric > span { color: var(--ea-muted); }
-.ea-ref .store-result__metric strong { color: var(--ea-ink); font-family: "Barlow Condensed", Impact, sans-serif; font-size: 22px; }
-.ea-ref .store-result__metric small { color: var(--ea-orange); font-family: "IBM Plex Mono", monospace; font-size: 9px; }
-.ea-ref .comparison-footer {
-  align-items: center;
-  margin-top: 28px;
-  padding-top: 18px;
-  border-top: 2px solid var(--ea-ink);
-}
-.ea-ref .distance-disclosure { max-width: 770px; color: var(--ea-muted); font-size: 10px; line-height: 1.55; }
-.ea-ref .distance-disclosure svg { color: var(--ea-orange); }
-.ea-ref .comparison-footer .back-button {
-  flex: none;
-  border: 2px solid var(--ea-ink);
-  border-radius: 0;
-  background: var(--ea-paper-light);
-  color: var(--ea-ink);
-  padding: 11px 15px;
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 10px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  box-shadow: 3px 3px 0 var(--ea-ink);
-}
-
 @media (max-width: 820px) {
   .ea-ref .home-hero { grid-template-columns: 1fr; min-height: 0; padding-top: 54px; gap: 20px; }
   .ea-ref .hero-art { width: min(510px, 100%); margin: 0 auto; }
   .ea-ref .steps { grid-template-columns: 1fr; gap: 16px; }
   .ea-ref .step-card--featured { transform: none; }
-  .ea-ref .store-result { grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(82px, .7fr)); gap: 11px; }
 }
 @media (max-width: 580px) {
   .ea-ref .site-header,
@@ -397,16 +287,6 @@
   .ea-ref .home-footer { flex-direction: column; gap: 8px; }
   .ea-ref .app-main { padding: 36px 0 58px; }
   .ea-ref .page-heading h1 { font-size: 56px; }
-  .ea-ref .sort-options { grid-template-columns: 1fr; gap: 13px; margin: 23px 0 34px; }
-  .ea-ref .sort-option { min-height: 125px; padding: 17px; }
-  .ea-ref .sort-option__copy strong { font-size: 23px; }
-  .ea-ref .store-results__heading { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .ea-ref .store-results__heading h2 { font-size: 33px; }
-  .ea-ref .store-result { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px 12px; padding: 16px; }
-  .ea-ref .store-result__identity { grid-column: 1 / -1; }
-  .ea-ref .store-result__identity h3 { font-size: 23px; }
-  .ea-ref .comparison-footer { align-items: stretch; flex-direction: column; }
-  .ea-ref .comparison-footer .back-button { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ea-ref *, .ea-ref *::before, .ea-ref *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }

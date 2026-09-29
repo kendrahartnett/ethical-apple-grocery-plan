@@ -206,4 +206,38 @@ Kendra's own manual break-testing of the app, and the fixes that came out of it.
 
 ---
 
+### Phase 8 — Prompt Log Organization (#68–69)
+Organizing the running prompt log itself into an instructor-friendly format.
+
+**#68** (2026-09-29, 12:19 CT) — Requested the prompt log be organized into categories: top highlight sections (Key Decisions, Caught/Corrected, Testing & Verification, Parked for Future) followed by the complete log broken into seven phases, so instructors see build-control evidence first and the full record stays complete underneath.
+
+**#69** (2026-09-29, 12:21 CT) — Requested the organized structure be reflected directly in `ea-prompt-log.md` itself rather than kept as a separate file — this file (the one you're reading) is the result: the canonical, organized version, merged in place.
+
+### Phase 9 — Supporting Research (#70)
+Market/competitive research gathered to support the problem statement and demo narrative.
+
+**#70** (2026-09-29, 12:29 CT) — Logged a competitive-landscape observation: most grocery apps in app stores are shopping-list tools, not budget-tracking tools — very few tell a user in advance that their planned purchases exceed their budget. Saved to `claude/ethical-apple-competitive-landscape.md` in the Claude Project as supporting evidence that Ethical Apple's budget-first angle isn't already solved by existing apps.
+
+---
+
+### Phase 10 — README Update & Ollama Prompt Documentation (#71–72)
+Bringing the README in line with the local Ollama/pricing backend Kendra and another model built, and documenting the exact system prompt used.
+
+**#71** (2026-09-29, 12:39 CT) — Requested the README be updated to document the new Ollama model and Open Price Engine grocery pricing API, shown as an artifact first for review and approval before writing to the actual file. In the process, found the repo already had a full local backend implementation committed (`server/`, `scripts/`, `tests/`, `docs/ollama-integration.md`), plus a partially-updated README with a stray paragraph and a stale store count left over from before the scope lock. Drafted a full corrected README (new Version 3 section, fixed store count, updated structure diagram/docs list/status/limitations) and published it as a reviewable artifact rather than writing it directly.
+
+**#72** (2026-09-29, 12:39 CT) — Shared the exact Ollama system prompt used by the local backend (guardrails: budget is a total not per-person/day, one breakfast/lunch/dinner from approved IDs only, no portion/price/ingredient changes, under-$10 plans exclude oil/seasonings, pantry only reduces cost when quantified, one store per basket, output independently validated). Logged for the record; offered to add it to `docs/ollama-integration.md` as documentation of the actual guardrails in use.
+
+**#73** (2026-09-29, 12:56 CT) — Requested the exact system prompt text be added to both docs, and the README update be completed with the "Version 1" framing excluded. Added the verbatim system prompt to `docs/ollama-integration.md` under a new "System prompt" subsection, with a line-by-line note on which backend check enforces each rule (e.g. the budget-total framing is enforced by `planner.js`'s budget math; the one-store-basket rule matches how `prices.js` builds store totals). Finalized and wrote the actual `README.md`: replaced the "Versions" framing (which separated a deployed "Version 1" from the new backend as "Version 3") with a single, non-versioned "Local Ollama + grocery pricing integration" section covering the same ground as the reviewed artifact draft, with the Version 1 write-up removed rather than kept alongside it, and links out to the new system-prompt documentation. Future Plans, Project Docs, Status, and Security/Limitations sections were also updated to drop version numbering while keeping the underlying facts (three sample stores, frontend deployed and tested, backend local-only, real distance planned next).
+
+---
+
+### Phase 11 — Real Pricing API Testing (#74)
+Kendra's own independent testing of the open-source Open Price Engine API for real store prices, ahead of any project integration.
+
+**#74** (2026-09-29, 14:32 CT) — Reported testing the open-source Open Price Engine API in her own VS Code terminal, outside this build, and finding current, same-day-updated ALDI US pricing data. No code changes yet — logged as an in-progress test to track; integration into the project is pending the test results.
+
+**#75** (2026-09-29, 15:02 CT) — Reported that the Open Price Engine API doesn't cover the stores needed, so real-store pricing via that API was dropped; the app continues pulling pricing from its own project dataset (sample-pricing mode). Finishing the local Ollama/llama3 integration and adding more meal options, with OpenAI's Codex assisting on adjustments, continuing down today's todo list. No code changes made here.
+
+---
+
 *This file is the canonical, organized prompt log for this repo. New prompts are logged verbatim first (in the Claude Project's `gate1-week3-full-prompts.md`), then reflected here under the appropriate phase and, where relevant, the highlight sections above.*

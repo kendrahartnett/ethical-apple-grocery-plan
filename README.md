@@ -33,7 +33,7 @@ The visual design/UI shell was generated with Replit (a Vite-based front end); *
 
 ### Supported stores
 
-Six sample Chicago-area stores are currently included in `src/data.js`: Aldi (Logan Square), Jewel-Osco (Lincoln Park), Food 4 Less (Pilsen), Walmart Supercenter (North Ave), Target (Logan Square/Milwaukee Ave), and Rico Fresh Market. Prices, coverage, and distance for each are sample/illustrative figures, not live retailer data.
+Six sample Chicago-area stores are currently included in `src/data.js`: Aldi (Logan Square), Walmart Supercenter (North Ave), and Rico Fresh Market. Prices, coverage, and distance for each are sample/illustrative figures, not live retailer data.
 
 ### Project structure
 

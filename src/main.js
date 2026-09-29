@@ -1,7 +1,6 @@
 import './styles.css';
 import './reference.css';
 import { DIETARY_PREFERENCES, GROCERY_ITEMS } from './data.js';
-import { comparisonView } from './planViews.js';
 
 const root = document.querySelector('#root');
 
@@ -11,14 +10,11 @@ const defaultForm = {
   days: 5,
   onHand: 'rice, eggs, olive oil',
   dietaryPreferences: [],
-  location: '',
-  pricingMode: 'sample',
   pantry: {},
 };
 
 const state = {
   form: { ...defaultForm },
-  storeSort: 'cost',
   loading: false,
   error: '',
 };
@@ -62,7 +58,7 @@ function escapeHTML(value) {
 
 function currentScreen() {
   const screen = window.location.hash.replace('#/', '').replace('#', '');
-  return ['setup', 'overview', 'groceries'].includes(screen) ? screen : 'home';
+  return ['setup', 'overview'].includes(screen) ? screen : 'home';
 }
 
 function navigate(screen) {
@@ -112,7 +108,7 @@ function homeView() {
       <div class="home-strip">
         <div class="home-strip-inner">
           <div class="strip-words"><span>thoughtful</span><span>practical</span><span>Chicago-made</span></div>
-          <div class="strip-aside">Budget-checked meals, with sample or reported grocery prices.</div>
+          <div class="strip-aside">Budget-checked meals using editable sample prices.</div>
         </div>
       </div>
       <section class="story-section" id="how-it-works" aria-labelledby="story-title">
@@ -139,8 +135,8 @@ function homeView() {
 function setupView() {
   const f = state.form;
   return `<div class="screen-in ea-ref">
-    ${header('setup')}
-    <main class="app-main">
+    <div ${state.loading ? 'inert' : ''}>${header('setup')}</div>
+    <main class="app-main" ${state.loading ? 'inert' : ''}>
       <div class="page-heading">
         <div class="section-kicker">First, a little context</div>
         <h1>Let’s make a plan that feels like yours.</h1>
@@ -158,7 +154,6 @@ function setupView() {
           <details><summary>Pantry quantities (optional)</summary><p>Enter usable amounts in the units shown. Leave zero when uncertain. Package-based units refer to the reference sizes used by your ingredient catalog.</p><div class="form-grid">
             ${GROCERY_ITEMS.map(i => `<div class="field"><label for="pantry-${i.id}">${escapeHTML(i.name)} (${i.id === 'tortillas' ? 'individual tortillas' : escapeHTML(i.unit)})</label><input id="pantry-${i.id}" name="pantry-${i.id}" type="number" min="0" max="1000" step="0.01" value="${f.pantry[i.id] || 0}"></div>`).join('')}
           </div></details>
-          <div class="field"><label for="pricing-mode">Price source</label><select id="pricing-mode" name="pricingMode"><option value="sample" ${f.pricingMode === 'sample' ? 'selected' : ''}>Sample prices — try the planner</option><option value="live" ${f.pricingMode === 'live' ? 'selected' : ''}>Reported store prices</option></select><small>Reported prices require configured store products. Missing or old prices will not be silently replaced with samples.</small></div>
           <hr class="form-divider">
           <p class="form-section-label">The way you like to eat</p>
           <div class="field"><span class="field-legend">Dietary preferences <span style="font-weight:400;color:var(--muted)">(optional, choose any that apply)</span></span>
@@ -166,8 +161,6 @@ function setupView() {
               ${DIETARY_PREFERENCES.map(pref => `<label class="checkbox-option"><input type="checkbox" name="dietaryPreferences" value="${pref.key}" ${f.dietaryPreferences.includes(pref.key) ? 'checked' : ''}><span>${pref.label}</span></label>`).join('')}
             </div>
           </div>
-          <div class="field"><label for="location">Chicago ZIP or address <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="location" name="location" type="text" value="${escapeHTML(f.location)}" placeholder="60647 or your neighborhood"><small>Reserved for a future real-distance feature. It does not affect this sample plan.</small></div>
-          <p role="status" aria-live="polite">${state.loading ? 'Preparing meals and checking the full shopping cost… This may take up to two minutes.' : ''}</p>
           ${state.error ? `<p role="alert" class="budget-warning">${escapeHTML(state.error)}</p>` : ''}
           <div class="form-bottom"><button class="back-button" type="button" data-action="home">← Back to home</button><button class="primary-button" type="submit" ${state.loading ? 'disabled' : ''}>${state.loading ? 'Preparing your plan…' : 'Build My Plan'} ${icons.arrow}</button></div>
         </form>
@@ -179,25 +172,24 @@ function setupView() {
         </aside>
       </div>
     </main>
+    ${state.loading ? `<div class="planning-overlay"><div class="planning-modal" role="dialog" aria-modal="true" aria-labelledby="planning-title" aria-describedby="planning-description" tabindex="-1"><div class="planning-spinner" aria-hidden="true"></div><h2 id="planning-title">Preparing your plan</h2><p id="planning-description" role="status">Preparing meals and checking the full shopping cost… This may take up to two minutes.</p></div></div>` : ''}
   </div>`;
 }
 
 /**
  * Bridges the Replit-designed form state to Kendra's own generatePlan()
  * logic in planLogic.js, and caches the result for the current form values
- * so overviewView() and groceriesView() don't recompute it independently.
+ * so the overview screen can reuse the validated response.
  */
 let cachedPlan = null;
 let requestVersion = 0;
 
 function planData() {
-  return cachedPlan || { meals: [], shoppingList: [], stores: [], totalCost: 0, infeasible: true, infeasibleReason: 'Build a plan from the form first.', warnings: [] };
+  return cachedPlan || { meals: [], shoppingList: [], totalCost: 0, infeasible: true, infeasibleReason: 'Build a plan from the form first.', warnings: [] };
 }
 
 /**
- * Plain-text rendering of the current plan, used by the download, copy,
- * and share actions on the grocery/meal plan screen. Kept as simple text
- * (no HTML) so it pastes cleanly into Notes, Messages, email, etc.
+ * Plain-text shopping list for download, copy, and share actions.
  */
 const MEAL_TYPE_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
 
@@ -213,48 +205,32 @@ function chunkMealsByDay(meals) {
   return days;
 }
 
-function buildPlanText(plan, form) {
-  const lines = [];
-  lines.push('Ethical Apple \u2014 Grocery Plan');
-  const dietLabel = form.dietaryPreferences && form.dietaryPreferences.length ? form.dietaryPreferences.map(key => (DIETARY_PREFERENCES.find(p => p.key === key) || {}).label || key).join(', ') : 'No specific preferences';
-  lines.push(`${form.days} ${form.days == 1 ? 'day' : 'days'} of meals for ${form.household} ${form.household == 1 ? 'person' : 'people'} (${dietLabel})`);
-  lines.push('');
-  lines.push('MEALS');
-  chunkMealsByDay(plan.meals).forEach((dayMeals, dayIndex) => {
-    lines.push(`Day ${dayIndex + 1}:`);
-    dayMeals.forEach(meal => {
-      const label = MEAL_TYPE_LABELS[meal.mealType];
-      lines.push(`  ${label ? label + ' - ' : ''}${meal.name}`);
-      lines.push(`    ${meal.preparationIdea || ''}`);
-    });
-  });
-  lines.push('');
-  lines.push('SHOPPING LIST');
+function buildShoppingListText(plan, form) {
+  const lines = ['SHOPPING LIST'];
   plan.shoppingList.forEach(item => {
     const suffix = item.pantryMatch ? '' : ` \u2014 ${money(item.estimatedCost)}`;
     lines.push(`${item.name} \u2014 ${item.quantity}${suffix}`);
   });
   lines.push('');
-  lines.push(`Estimated total: ${moneyRange(plan.totalCost)} (budget: ${money(form.budget)})`);
-  if (plan.infeasible) {
-    lines.push('');
-    lines.push(`Heads up: ${plan.infeasibleReason}`);
-  }
-  lines.push('');
-  lines.push(`Price source: ${plan.pricingMode === 'live' ? 'Open Price Engine' : 'sample catalog'}. Store: ${plan.selectedStore || 'none'}.`);
-  lines.push(...(plan.warnings || []));
-  lines.push('Totals exclude unverified taxes, fees and checkout changes.');
+  lines.push(`Estimated shopping total: ${moneyRange(plan.totalCost)}`);
+  lines.push(`Budget: ${money(form.budget)}`);
   return lines.join('\n');
 }
 
 const supportsShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+const nearbyStores = [
+  { name: 'ALDI', address: '1753 N Milwaukee Ave, Chicago, IL 60647', area: 'Wicker Park / Bucktown' },
+  { name: 'Walmart Supercenter', address: '4626 W Diversey Ave, Chicago, IL 60639', area: 'Hermosa' },
+  { name: 'Rico Fresh Market', address: '3552 W Armitage Ave, Chicago, IL 60647', area: 'Logan Square' },
+];
 
 function downloadPlanText(text) {
   const blob = new Blob([text], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'ethical-apple-grocery-plan.txt';
+  link.download = 'ethical-apple-shopping-list.txt';
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -284,7 +260,7 @@ function overviewView() {
         <div class="page-heading"><div class="section-kicker">Your grocery and meal plan</div><h1>A week with a little more ease.</h1><p>${state.form.days} ${state.form.days == 1 ? 'day' : 'days'} of meals for ${state.form.household} ${state.form.household == 1 ? 'person' : 'people'}, shaped around ${state.form.dietaryPreferences.length ? escapeHTML(state.form.dietaryPreferences.map(key => (DIETARY_PREFERENCES.find(p => p.key === key) || {}).label || key).join(', ').toLowerCase()) : 'your'} preferences and what is already in the kitchen.</p></div>
         ${plan.infeasible ? '' : `<div class="summary-meta">Estimate ${moneyRange(plan.totalCost)} \u00b7 budget ${money(state.form.budget)}</div>`}
       </div>
-      <p class="estimate-disclosure">${plan.source === 'ollama' ? 'AI-assisted meals, with backend-checked costs.' : 'Rule-based meal plan.'} ${plan.pricingMode === 'live' ? 'Prices reported by Open Price Engine.' : 'Illustrative sample prices.'} ${plan.selectedStore ? `Basket: ${escapeHTML(plan.selectedStore)}.` : ''}</p>
+      <p class="estimate-disclosure">${plan.source === 'ollama' ? 'AI-assisted meals, with backend-checked costs.' : 'Rule-based meal plan.'} Prices are illustrative samples, not live store quotes.</p>
       ${(plan.warnings || []).map(w => `<p class="estimate-disclosure">${escapeHTML(w)}</p>`).join('')}
       ${plan.infeasible ? `<div class="budget-warning" role="alert">${icons.info}<div><strong>Heads up:</strong> ${escapeHTML(plan.infeasibleReason)}</div></div>
       <div class="flow-actions"><button class="back-button" type="button" data-action="edit-plan">← Adjust budget, household, or days</button></div>` : `
@@ -294,11 +270,11 @@ function overviewView() {
           <div class="meal-stack">${chunkMealsByDay(plan.meals).map((dayMeals, dayIndex) => `<div class="day-group"><div class="day-group-heading">Day ${dayIndex + 1}</div>${dayMeals.map(meal => `<article class="day-meal"><div class="day-label">${MEAL_TYPE_LABELS[meal.mealType] || ''}</div><div><h3>${escapeHTML(meal.name)}</h3><p>${escapeHTML(meal.note || '')}.</p><p>${escapeHTML(meal.preparationIdea || '')}</p><details><summary>Ingredients for ${state.form.household} people</summary><ul>${meal.ingredients.map(i => `<li>${escapeHTML(i.name)}: ${i.householdQuantity} ${escapeHTML(i.unit)}</li>`).join('')}</ul></details></div></article>`).join('')}</div>`).join('')}</div>
         </section>
         <section class="panel shopping-panel" aria-labelledby="shopping-title">
-          <div class="panel-heading"><h2 id="shopping-title">Shopping list</h2><span>${plan.pricingMode === 'live' ? 'reported prices' : 'sample prices'}</span></div>
+          <div class="panel-heading"><h2 id="shopping-title">Shopping list</h2><span>sample prices</span></div>
           <table class="shopping-table">
             <caption>Whole packages after subtracting entered pantry quantities.</caption>
             <thead><tr><th scope="col">Item</th><th scope="col">Quantity</th><th scope="col">Estimated cost</th></tr></thead>
-            <tbody>${plan.shoppingList.map(item => `<tr><td>${escapeHTML(item.name)}${item.pantryMatch ? ' <small>(on hand)</small>' : ''}${item.productName ? `<small> · ${escapeHTML(item.productName)}</small>` : ''}${item.priceUpdatedAt ? `<small> · ${escapeHTML(item.priceUpdatedAt)}</small>` : ''}</td><td>${escapeHTML(item.quantity)}</td><td>${money(item.estimatedCost)}</td></tr>`).join('')}</tbody>
+            <tbody>${plan.shoppingList.map(item => `<tr><td>${escapeHTML(item.name)}${item.pantryMatch ? ' <small>(on hand)</small>' : ''}</td><td>${escapeHTML(item.quantity)}</td><td>${money(item.estimatedCost)}</td></tr>`).join('')}</tbody>
             <tfoot><tr><td colspan="2">Estimated shopping total</td><td>${moneyRange(plan.totalCost)}</td></tr></tfoot>
           </table>
           <p class="estimate-disclosure">${icons.info}<span>This subtotal fits the entered budget at the displayed prices. Taxes, fees and checkout changes are not included. Dietary tags are preferences, not verified nutrition or allergy guidance.</span></p>
@@ -309,19 +285,20 @@ function overviewView() {
           </div>
         </section>
       </div>
-       <div class="flow-actions"><button class="back-button" type="button" data-action="edit-plan">← Back to form</button><button class="primary-button" type="button" data-action="groceries">Compare where to shop ${icons.arrow}</button></div>`}
+      <section class="nearby-stores" aria-labelledby="nearby-stores-title">
+        <div class="nearby-stores__heading"><div><div class="section-kicker">Where to shop</div><h2 id="nearby-stores-title">Grocery stores in and around Logan Square</h2></div><p>Locations only. Check each store for current hours, stock, and prices.</p></div>
+        <div class="nearby-stores__grid">${nearbyStores.map(store => `<article class="panel nearby-store"><span class="nearby-store__area">${escapeHTML(store.area)}</span><h3>${escapeHTML(store.name)}</h3><p>${escapeHTML(store.address)}</p><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}" target="_blank" rel="noopener noreferrer" aria-label="Get directions to ${escapeHTML(store.name)}">Get directions ${icons.arrow}</a></article>`).join('')}</div>
+      </section>
+       <div class="flow-actions"><button class="back-button" type="button" data-action="edit-plan">← Back to form</button></div>`}
     </main>
   </div>`;
 }
 
-function groceriesView() {
-  return comparisonView(planData(), header("groceries"));
-}
-
 function render() {
   const screen = currentScreen();
-  root.innerHTML = screen === 'home' ? homeView() : screen === 'setup' ? setupView() : screen === 'overview' ? overviewView() : groceriesView();
+  root.innerHTML = screen === 'home' ? homeView() : screen === 'setup' ? setupView() : overviewView();
   bindEvents(screen);
+  root.querySelector('.planning-modal')?.focus();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -329,35 +306,27 @@ function bindEvents(screen) {
   root.querySelectorAll('[data-action="go-setup"]').forEach(button => button.addEventListener('click', () => navigate('setup')));
   root.querySelectorAll('[data-action="home"]').forEach(button => button.addEventListener('click', () => navigate('home')));
   root.querySelectorAll('[data-action="overview"]').forEach(button => button.addEventListener('click', () => navigate('overview')));
-  root.querySelectorAll('[data-action="groceries"]').forEach(button => button.addEventListener('click', () => navigate('groceries')));
   root.querySelectorAll('[data-action="edit-plan"]').forEach(button => button.addEventListener('click', () => navigate('setup')));
   root.querySelectorAll('[data-action="print"]').forEach(button => button.addEventListener('click', () => window.print()));
   root.querySelectorAll('[data-action="download-plan"]').forEach(button => button.addEventListener('click', () => {
-    downloadPlanText(buildPlanText(planData(), state.form));
+    downloadPlanText(buildShoppingListText(planData(), state.form));
   }));
   root.querySelectorAll('[data-action="copy-plan"]').forEach(button => button.addEventListener('click', () => {
-    copyPlanText(buildPlanText(planData(), state.form), button);
+    copyPlanText(buildShoppingListText(planData(), state.form), button);
   }));
   root.querySelectorAll('[data-action="share-plan"]').forEach(button => button.addEventListener('click', () => {
     navigator.share({
-      title: 'Ethical Apple — Grocery Plan',
-      text: buildPlanText(planData(), state.form),
+      title: 'Shopping List',
+      text: buildShoppingListText(planData(), state.form),
     }).catch(() => {});
   }));
   root.querySelectorAll('[data-action="start-over"]').forEach(button => button.addEventListener('click', () => {
     state.form = { ...defaultForm, dietaryPreferences: [...defaultForm.dietaryPreferences] };
-    state.storeSort = 'cost';
     cachedPlan = null;
     requestVersion++;
     state.loading = false;
     state.error = '';
     navigate('home');
-  }));
-
-  root.querySelectorAll('[data-store-sort]').forEach(button => button.addEventListener('click', () => {
-    state.storeSort = button.dataset.storeSort;
-    render();
-    root.querySelector(`[data-store-sort="${state.storeSort}"]`)?.focus();
   }));
 
   const setupForm = root.querySelector('#setup-form');
@@ -372,19 +341,15 @@ function bindEvents(screen) {
          days: Math.min(14, Math.max(1, Number(data.get('days')) || defaultForm.days)),
         onHand: String(data.get('onHand') || '').trim(),
         dietaryPreferences: data.getAll('dietaryPreferences').map(String),
-        location: String(data.get('location') || '').trim(),
-        pricingMode: String(data.get('pricingMode')),
         pantry: Object.fromEntries(GROCERY_ITEMS.map(i => [i.id, Number(data.get(`pantry-${i.id}`) || 0)])),
       };
-       state.storeSort = 'cost';
        cachedPlan = null;
       const version = ++requestVersion;
       state.loading = true;
       state.error = '';
       render();
       try {
-        const { location, ...payload } = state.form;
-        const response = await fetch(`${import.meta.env.BASE_URL}api/plan`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(150000) });
+        const response = await fetch(`${import.meta.env.BASE_URL}api/plan`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state.form), signal: AbortSignal.timeout(150000) });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Unable to prepare a plan.');
         if (version !== requestVersion) return;
