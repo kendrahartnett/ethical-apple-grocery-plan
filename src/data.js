@@ -424,22 +424,7 @@ export const MEAL_TEMPLATES = [
   },
 
   // --- Dinners ---------------------------------------------------------------
-  {
-    id: "rice_and_beans",
-    name: "Rice and Beans",
-    mealType: "dinner",
-    note: "a simple, filling pantry staple that stretches a long way",
-    vegetarian: true,
-    dietaryTags: ["vegetarian", "highProtein", "highFiber", "under30"],
-    prepMinutes: 25,
-    pantryFriendly: true,
-    ingredients: [
-      { itemId: "rice", qtyPerPerson: 0.35 },
-      { itemId: "beans", qtyPerPerson: 1 },
-      { itemId: "onion", qtyPerPerson: 0.25 },
-      { itemId: "cooking_oil", qtyPerPerson: 0.05 },
-    ],
-  },
+
   {
     id: "pasta_with_sauce",
     name: "Spaghetti with Sauce",
