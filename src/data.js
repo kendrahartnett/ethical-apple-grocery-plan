@@ -1,15 +1,18 @@
 /**
- * data.js — Ethical Apple (Version 1)
+ * data.js — Ethical Apple
  *
  * All the "facts" the app runs on: staple grocery items with editable sample
  * prices and simple meal templates.
  * Nothing here calls an external API — this is the controlled dataset that
- * lets Version 1 work end to end on its own. This is Kendra's own data,
- * imported into the Replit-generated UI (src/main.js) — it is not part
- * of what Replit produced.
+ * lets the app work end to end entirely in the browser, with no backend.
+ * This is Kendra's own data, imported into the Replit-generated UI
+ * (src/main.js) — it is not part of what Replit produced.
  *
- * The local Ollama planner can create meals from these ingredients. This
- * catalog supplies the prices used to verify its shopping list and budget.
+ * planLogic.js's generatePlan() builds meal plans from these ingredients.
+ * Only meal templates whose every ingredient exists in GROCERY_ITEMS are
+ * ever selectable (see AVAILABLE_MEAL_TEMPLATES in planLogic.js) -- a few
+ * templates below still reference ingredients not yet added here, left
+ * from earlier backend/Ollama work.
  */
 
 // ---------------------------------------------------------------------------

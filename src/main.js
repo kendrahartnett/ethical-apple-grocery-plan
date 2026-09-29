@@ -1,6 +1,7 @@
 import './styles.css';
 import './reference.css';
 import { DIETARY_PREFERENCES, GROCERY_ITEMS } from './data.js';
+import { generatePlan, parseOnHand } from './planLogic.js';
 
 const root = document.querySelector('#root');
 
@@ -15,8 +16,6 @@ const defaultForm = {
 
 const state = {
   form: { ...defaultForm },
-  loading: false,
-  error: '',
 };
 
 const icons = {
@@ -38,9 +37,7 @@ function money(value) {
  * Totals are shown as a range, not a single number, per the scope
  * worksheet's safeguard: real prices could run higher than the sample
  * data, so a specific dollar figure overstates what the estimate can
- * actually guarantee. The high end uses the same PRICE_ERROR_MARGIN as the
- * cheapest-store suppression logic, so both reflect the same stated
- * uncertainty in the sample pricing.
+ * actually guarantee.
  */
 function moneyRange(value) {
   return money(value);
@@ -135,8 +132,8 @@ function homeView() {
 function setupView() {
   const f = state.form;
   return `<div class="screen-in ea-ref">
-    <div ${state.loading ? 'inert' : ''}>${header('setup')}</div>
-    <main class="app-main" ${state.loading ? 'inert' : ''}>
+    ${header('setup')}
+    <main class="app-main">
       <div class="page-heading">
         <div class="section-kicker">First, a little context</div>
         <h1>Let’s make a plan that feels like yours.</h1>
@@ -161,8 +158,7 @@ function setupView() {
               ${DIETARY_PREFERENCES.map(pref => `<label class="checkbox-option"><input type="checkbox" name="dietaryPreferences" value="${pref.key}" ${f.dietaryPreferences.includes(pref.key) ? 'checked' : ''}><span>${pref.label}</span></label>`).join('')}
             </div>
           </div>
-          ${state.error ? `<p role="alert" class="budget-warning">${escapeHTML(state.error)}</p>` : ''}
-          <div class="form-bottom"><button class="back-button" type="button" data-action="home">← Back to home</button><button class="primary-button" type="submit" ${state.loading ? 'disabled' : ''}>${state.loading ? 'Preparing your plan…' : 'Build My Plan'} ${icons.arrow}</button></div>
+          <div class="form-bottom"><button class="back-button" type="button" data-action="home">← Back to home</button><button class="primary-button" type="submit">Build My Plan ${icons.arrow}</button></div>
         </form>
         <aside class="panel setup-aside">
           <div class="aside-kicker">A gentle nudge</div>
@@ -172,20 +168,18 @@ function setupView() {
         </aside>
       </div>
     </main>
-    ${state.loading ? `<div class="planning-overlay"><div class="planning-modal" role="dialog" aria-modal="true" aria-labelledby="planning-title" aria-describedby="planning-description" tabindex="-1"><div class="planning-spinner" aria-hidden="true"></div><h2 id="planning-title">Preparing your plan</h2><p id="planning-description" role="status">Preparing meals and checking the full shopping cost… This may take up to two minutes.</p></div></div>` : ''}
   </div>`;
 }
 
 /**
- * Bridges the Replit-designed form state to Kendra's own generatePlan()
- * logic in planLogic.js, and caches the result for the current form values
- * so the overview screen can reuse the validated response.
+ * Runs Kendra's own generatePlan() logic in planLogic.js, entirely in the
+ * browser -- no network call, no backend. The result is cached for the
+ * current form values so the overview screen can reuse it.
  */
 let cachedPlan = null;
-let requestVersion = 0;
 
 function planData() {
-  return cachedPlan || { meals: [], shoppingList: [], totalCost: 0, infeasible: true, infeasibleReason: 'Build a plan from the form first.', warnings: [] };
+  return cachedPlan || { meals: [], shoppingList: [], totalCost: 0, infeasible: true, infeasibleReason: 'Build a plan from the form first.' };
 }
 
 /**
@@ -208,8 +202,8 @@ function chunkMealsByDay(meals) {
 function buildShoppingListText(plan, form) {
   const lines = ['SHOPPING LIST'];
   plan.shoppingList.forEach(item => {
-    const suffix = item.pantryMatch ? '' : ` \u2014 ${money(item.estimatedCost)}`;
-    lines.push(`${item.name} \u2014 ${item.quantity}${suffix}`);
+    const suffix = item.pantryMatch ? '' : ` — ${money(item.estimatedCost)}`;
+    lines.push(`${item.name} — ${item.quantity}${suffix}`);
   });
   lines.push('');
   lines.push(`Estimated shopping total: ${moneyRange(plan.totalCost)}`);
@@ -258,16 +252,15 @@ function overviewView() {
     <main class="app-main">
       <div class="plan-summary">
         <div class="page-heading"><div class="section-kicker">Your grocery and meal plan</div><h1>A week with a little more ease.</h1><p>${state.form.days} ${state.form.days == 1 ? 'day' : 'days'} of meals for ${state.form.household} ${state.form.household == 1 ? 'person' : 'people'}, shaped around ${state.form.dietaryPreferences.length ? escapeHTML(state.form.dietaryPreferences.map(key => (DIETARY_PREFERENCES.find(p => p.key === key) || {}).label || key).join(', ').toLowerCase()) : 'your'} preferences and what is already in the kitchen.</p></div>
-        ${plan.infeasible ? '' : `<div class="summary-meta">Estimate ${moneyRange(plan.totalCost)} \u00b7 budget ${money(state.form.budget)}</div>`}
+        ${plan.infeasible ? '' : `<div class="summary-meta">Estimate ${moneyRange(plan.totalCost)} · budget ${money(state.form.budget)}</div>`}
       </div>
-      <p class="estimate-disclosure">${plan.source === 'ollama' ? 'AI-assisted meals, with backend-checked costs.' : 'Rule-based meal plan.'} Prices are illustrative samples, not live store quotes.</p>
-      ${(plan.warnings || []).map(w => `<p class="estimate-disclosure">${escapeHTML(w)}</p>`).join('')}
+      <p class="estimate-disclosure">Rule-based meal plan. Prices are illustrative samples, not live store quotes.</p>
       ${plan.infeasible ? `<div class="budget-warning" role="alert">${icons.info}<div><strong>Heads up:</strong> ${escapeHTML(plan.infeasibleReason)}</div></div>
       <div class="flow-actions"><button class="back-button" type="button" data-action="edit-plan">← Adjust budget, household, or days</button></div>` : `
       <div class="plan-layout">
         <section class="panel meal-panel" aria-labelledby="meals-title">
           <div class="panel-heading"><h2 id="meals-title">Meals for the week</h2><span>${state.form.days} ${state.form.days == 1 ? 'day' : 'days'} · ${plan.meals.length} meals</span></div>
-          <div class="meal-stack">${chunkMealsByDay(plan.meals).map((dayMeals, dayIndex) => `<div class="day-group"><div class="day-group-heading">Day ${dayIndex + 1}</div>${dayMeals.map(meal => `<article class="day-meal"><div class="day-label">${MEAL_TYPE_LABELS[meal.mealType] || ''}</div><div><h3>${escapeHTML(meal.name)}</h3><p>${escapeHTML(meal.note || '')}.</p><p>${escapeHTML(meal.preparationIdea || '')}</p><details><summary>Ingredients for ${state.form.household} people</summary><ul>${meal.ingredients.map(i => `<li>${escapeHTML(i.name)}: ${i.householdQuantity} ${escapeHTML(i.unit)}</li>`).join('')}</ul></details></div></article>`).join('')}</div>`).join('')}</div>
+          <div class="meal-stack">${chunkMealsByDay(plan.meals).map((dayMeals, dayIndex) => `<div class="day-group"><div class="day-group-heading">Day ${dayIndex + 1}</div>${dayMeals.map(meal => `<article class="day-meal"><div class="day-label">${MEAL_TYPE_LABELS[meal.mealType] || ''}</div><div><h3>${escapeHTML(meal.name)}</h3><p>${escapeHTML(meal.note || '')}.</p><details><summary>Ingredients for ${state.form.household} people</summary><ul>${meal.ingredients.map(i => { const item = GROCERY_ITEMS.find(g => g.id === i.itemId); return `<li>${escapeHTML(item ? item.name : i.itemId)}: ${(i.qtyPerPerson * state.form.household).toFixed(2)} ${escapeHTML(item ? item.unit : '')}</li>`; }).join('')}</ul></details></div></article>`).join('')}</div>`).join('')}</div>
         </section>
         <section class="panel shopping-panel" aria-labelledby="shopping-title">
           <div class="panel-heading"><h2 id="shopping-title">Shopping list</h2><span>sample prices</span></div>
@@ -298,7 +291,6 @@ function render() {
   const screen = currentScreen();
   root.innerHTML = screen === 'home' ? homeView() : screen === 'setup' ? setupView() : overviewView();
   bindEvents(screen);
-  root.querySelector('.planning-modal')?.focus();
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -323,48 +315,33 @@ function bindEvents(screen) {
   root.querySelectorAll('[data-action="start-over"]').forEach(button => button.addEventListener('click', () => {
     state.form = { ...defaultForm, dietaryPreferences: [...defaultForm.dietaryPreferences] };
     cachedPlan = null;
-    requestVersion++;
-    state.loading = false;
-    state.error = '';
     navigate('home');
   }));
 
   const setupForm = root.querySelector('#setup-form');
   if (setupForm) {
-    setupForm.addEventListener('submit', async event => {
+    setupForm.addEventListener('submit', event => {
       event.preventDefault();
-      if (state.loading) return;
       const data = new FormData(setupForm);
       state.form = {
-        budget: Math.max(1, Number(data.get('budget')) || defaultForm.budget),
-        household: Math.max(1, Number(data.get('household')) || defaultForm.household),
-         days: Math.min(14, Math.max(1, Number(data.get('days')) || defaultForm.days)),
+        budget: Math.min(10000, Math.max(1, Number(data.get('budget')) || defaultForm.budget)),
+        household: Math.min(20, Math.max(1, Number(data.get('household')) || defaultForm.household)),
+        days: Math.min(14, Math.max(1, Number(data.get('days')) || defaultForm.days)),
         onHand: String(data.get('onHand') || '').trim(),
         dietaryPreferences: data.getAll('dietaryPreferences').map(String),
-        pantry: Object.fromEntries(GROCERY_ITEMS.map(i => [i.id, Number(data.get(`pantry-${i.id}`) || 0)])),
+        pantry: Object.fromEntries(GROCERY_ITEMS.map(i => [i.id, Math.max(0, Number(data.get(`pantry-${i.id}`)) || 0)])),
       };
-       cachedPlan = null;
-      const version = ++requestVersion;
-      state.loading = true;
-      state.error = '';
-      render();
-      try {
-        const response = await fetch(`${import.meta.env.BASE_URL}api/plan`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(state.form), signal: AbortSignal.timeout(150000) });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Unable to prepare a plan.');
-        if (version !== requestVersion) return;
-        cachedPlan = result;
-        state.loading = false;
-        if (currentScreen() === 'setup') navigate('overview');
-      } catch (error) {
-        if (version !== requestVersion) return;
-        state.error = error.name === 'TimeoutError' ? 'Planning timed out. Please try again.' : error.message === 'Failed to fetch' ? 'Cannot reach the planning service. Start the app with npm run dev.' : error.message;
-      } finally {
-        if (version === requestVersion) { state.loading = false; render(); }
-      }
+      cachedPlan = generatePlan({
+        budget: state.form.budget,
+        householdSize: state.form.household,
+        days: state.form.days,
+        onHandIds: parseOnHand(state.form.onHand),
+        pantry: state.form.pantry,
+        dietaryPreferences: state.form.dietaryPreferences,
+      });
+      navigate('overview');
     });
   }
-
 }
 
 window.addEventListener('hashchange', render);

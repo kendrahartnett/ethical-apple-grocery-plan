@@ -240,4 +240,11 @@ Kendra's own independent testing of the open-source Open Price Engine API for re
 
 ---
 
+### Phase 12 — Ollama Removal (#76)
+Testing the local Ollama backend surfaced real problems, leading to a scope decision to remove it and keep the app fully client-side and deterministic.
+
+**#76** (2026-09-29, 15:51 CT) — Reported testing issues with the Ollama backend (an unreliable fallback path, no clean Vercel deployment story, and generation slower than the rule-based planner it was meant to improve on) and requested it be removed completely, restoring code-controlled meal planning. Removed `server/`, `scripts/dev.js`, `docs/ollama-integration.md`, the server-only test file, and the now-unneeded `.env`/`.env.example`; rewired `src/main.js` to call `generatePlan()` in `src/planLogic.js` directly and synchronously, with no network call. While restoring, found and fixed two real correctness gaps left over from the Ollama/Codex work: (1) the client planner never picked up the verified pantry-quantity feature, so those quantities were being silently ignored -- fixed so a verified quantity reduces cost while a free-text name alone only guides meal choice; (2) 10 meal templates reference 20 ingredient ids never added to `GROCERY_ITEMS`, which would have understated their true cost -- added an ingredient-completeness filter (`AVAILABLE_MEAL_TEMPLATES`) so those meals stay excluded from rotation instead of mispriced, and listed the missing ingredients in the README as a known gap. Replaced the server-only test file with `tests/planLogic.test.js` (7 tests, all passing) and confirmed `npm run build` produces a small, fully static bundle again. Rewrote `README.md` to remove the Ollama section and explain the removal, and flagged (without rebuilding) that the store-price comparison described in `scope-worksheet.md` isn't currently implemented in the shipped code.
+
+---
+
 *This file is the canonical, organized prompt log for this repo. New prompts are logged verbatim first (in the Claude Project's `gate1-week3-full-prompts.md`), then reflected here under the appropriate phase and, where relevant, the highlight sections above.*

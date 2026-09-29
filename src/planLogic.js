@@ -1,12 +1,12 @@
 /**
- * planLogic.js — Ethical Apple (Version 1)
+ * planLogic.js — Ethical Apple
  *
  * All of the app's decision-making: budget math, meal selection, shopping
- * list construction and budget-fit substitution. This is legacy Version 1
- * client logic; the active local planner lives in server/planner.js.
- * This is Kendra's own logic (originally written and tested as app.js
- * before the Replit frontend arrived) — main.js only renders whatever
- * this module decides. No external API calls happen here in Version 1.
+ * list construction, and budget-fit substitution. This is Kendra's own
+ * logic (originally written and tested as app.js before the Replit
+ * frontend arrived) — main.js only renders whatever this module decides.
+ * No external API or backend is used here: this runs entirely in the
+ * browser, so the app can be deployed as a static site with no server.
  */
 
 import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES } from "./data.js";
@@ -20,10 +20,28 @@ const MIN_PER_PERSON_PER_DAY = 4.5;
 // sample data. 0.875 is the midpoint of that range.
 const BUDGET_BUFFER_FRACTION = 0.875;
 
+const KNOWN_ITEM_IDS = new Set(GROCERY_ITEMS.map((i) => i.id));
+
+/**
+ * Only meals whose every ingredient exists in GROCERY_ITEMS are safe to
+ * select and price -- an unknown ingredient id would otherwise be silently
+ * skipped by buildShoppingList(), understating both the shopping list and
+ * the total cost. A handful of meal templates were added during earlier
+ * backend/Ollama work (e.g. items like "ground_turkey", "chicken_breast",
+ * "salsa") that reference ingredients never added to GROCERY_ITEMS; this
+ * filter keeps them out of rotation until matching grocery items exist,
+ * instead of quietly pricing them wrong.
+ */
+export const AVAILABLE_MEAL_TEMPLATES = MEAL_TEMPLATES.filter((m) =>
+  m.ingredients.every((ing) => KNOWN_ITEM_IDS.has(ing.itemId))
+);
+
 /**
  * Parse the "already on hand" free-text field into a Set of GROCERY_ITEMS
- * ids, matched loosely by name. Anything typed that doesn't match a known
- * item is ignored for now (Version 1 keeps this simple and controlled).
+ * ids, matched loosely by name. This only guides which meals are preferred
+ * (ingredient reuse) -- it never reduces cost on its own. Only a verified
+ * quantity entered in the pantry fields below reduces what's shown as
+ * needing to be bought (see buildShoppingList).
  */
 export function parseOnHand(text) {
   const onHandIds = new Set();
@@ -53,18 +71,20 @@ function mealCost(meal, householdSize, onHandIds) {
 
 /**
  * Aggregate ingredient quantities across all selected meals and price out
- * what still needs to be bought. Ingredients already on hand are still
- * listed (so the user can see the full picture) but marked pantryMatch
- * with $0 estimated cost.
+ * what still needs to be bought. Only a verified quantity entered in the
+ * pantry field (pantry[itemId]) is subtracted from what's needed -- typing
+ * an ingredient's name in the free-text "on hand" field is a preference
+ * signal for meal selection only, never a free supply.
  *
  * A few staples (bread, tortillas) are bought in bulk units that
  * realistically cover several days on their own, no matter how many meals
  * use them or how large the household is (one loaf of bread, one pack of
- * tortillas). Those items carry a `daysPerUnit` on GROCERY_ITEMS and are
- * quantified off the plan length instead of summed per-meal usage.
+ * tortillas). Those items carry a `daysPerUnit` on GROCERY_ITEMS: the
+ * "required" quantity is a whole number of units based on plan length,
+ * and pantry quantities for those items are treated as units on hand.
  */
-function buildShoppingList(meals, householdSize, onHandIds, days) {
-  const quantities = {}; // itemId -> total qty needed across the whole plan
+function buildShoppingList(meals, householdSize, pantry, days) {
+  const quantities = {}; // itemId -> total raw qty needed across the whole plan
 
   meals.forEach((meal) => {
     meal.ingredients.forEach((ing) => {
@@ -80,10 +100,11 @@ function buildShoppingList(meals, householdSize, onHandIds, days) {
     const item = GROCERY_ITEMS.find((g) => g.id === itemId);
     if (!item) return;
 
-    const pantryMatch = onHandIds.has(itemId);
-    const roundedQty = item.daysPerUnit
-      ? Math.max(1, Math.ceil(days / item.daysPerUnit)) // bulk staple: covers several days per unit
-      : Math.max(1, Math.ceil(qty)); // buy in whole units
+    const pantryQty = Math.max(0, Number(pantry?.[itemId]) || 0);
+    const requiredQty = item.daysPerUnit ? Math.max(1, Math.ceil(days / item.daysPerUnit)) : qty;
+    const neededQty = Math.max(0, requiredQty - pantryQty);
+    const pantryMatch = neededQty < 1e-8;
+    const roundedQty = pantryMatch ? 0 : Math.max(1, Math.ceil(neededQty - 1e-8));
     const estimatedCost = pantryMatch ? 0 : roundedQty * item.price;
     if (!pantryMatch) totalCost += estimatedCost;
 
@@ -104,12 +125,17 @@ function buildShoppingList(meals, householdSize, onHandIds, days) {
 /**
  * Core rule-based planner.
  * budget, householdSize, days: numbers
- * onHandIds: Set of GROCERY_ITEMS ids the user already has
- * vegetarianOnly: boolean
+ * onHandIds: Set of GROCERY_ITEMS ids typed into the free-text "on hand"
+ *   field -- used only to prefer meals built around them, never to reduce
+ *   cost.
+ * pantry: { [itemId]: quantity } verified amounts already on hand; these
+ *   are what actually reduce the shopping list and its cost.
+ * dietaryPreferences: array of DIETARY_PREFERENCES keys, all of which a
+ *   candidate meal's dietaryTags must include.
  *
  * Returns { meals, shoppingList, totalCost, infeasible, infeasibleReason }
  */
-export function generatePlan({ budget, householdSize, days, onHandIds, dietaryPreferences = [] }) {
+export function generatePlan({ budget, householdSize, days, onHandIds = new Set(), pantry = {}, dietaryPreferences = [] }) {
   const budgetPerDay = budget / days;
   const budgetPerPersonPerDay = budgetPerDay / householdSize;
   // The buffer target the plan aims for; the full budget is still the hard
@@ -133,10 +159,11 @@ export function generatePlan({ budget, householdSize, days, onHandIds, dietaryPr
 
   // Dietary Preferences checklist: a meal is a candidate only if it carries
   // every preference the user checked, in its own `dietaryTags` array. With
-  // nothing checked, every meal is a candidate (Version 1 behavior).
+  // nothing checked, every meal with fully-priced ingredients is a
+  // candidate.
   let candidates = dietaryPreferences.length
-    ? MEAL_TEMPLATES.filter((m) => dietaryPreferences.every((pref) => (m.dietaryTags || []).includes(pref)))
-    : MEAL_TEMPLATES.slice();
+    ? AVAILABLE_MEAL_TEMPLATES.filter((m) => dietaryPreferences.every((pref) => (m.dietaryTags || []).includes(pref)))
+    : AVAILABLE_MEAL_TEMPLATES.slice();
 
   const onHandScore = (meal) => meal.ingredients.filter((ing) => onHandIds.has(ing.itemId)).length;
 
@@ -175,7 +202,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds, dietaryPr
     });
   }
 
-  let { shoppingList, totalCost } = buildShoppingList(selectedMeals, householdSize, onHandIds, days);
+  let { shoppingList, totalCost } = buildShoppingList(selectedMeals, householdSize, pantry, days);
 
   // If the initial (cheapest-first) plan leaves a lot of the budget unused,
   // swap in pricier, more varied meals from the same eligible set -- the
@@ -204,7 +231,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds, dietaryPr
 
       const trial = selectedMeals.slice();
       trial[i] = candidate;
-      const rebuilt = buildShoppingList(trial, householdSize, onHandIds, days);
+      const rebuilt = buildShoppingList(trial, householdSize, pantry, days);
       if (rebuilt.totalCost > targetBudget) continue; // would overshoot the buffer target -- skip this swap
 
       selectedMeals = trial;
@@ -247,7 +274,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds, dietaryPr
     selectedMeals[worstIndex] = replacement;
     substitutionCounts[type]++;
 
-    const rebuilt = buildShoppingList(selectedMeals, householdSize, onHandIds, days);
+    const rebuilt = buildShoppingList(selectedMeals, householdSize, pantry, days);
     shoppingList = rebuilt.shoppingList;
     totalCost = rebuilt.totalCost;
     attempts++;
