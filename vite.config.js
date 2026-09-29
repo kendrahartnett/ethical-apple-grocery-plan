@@ -9,13 +9,13 @@ export default defineConfig({
   server: {
     port,
     strictPort: true,
-    host: '0.0.0.0',
-    allowedHosts: true,
+    host: '127.0.0.1',
+    proxy: { '/api': `http://127.0.0.1:${process.env.API_PORT || 3001}` },
   },
   preview: {
     port,
-    host: '0.0.0.0',
-    allowedHosts: true,
+    host: '127.0.0.1',
+    proxy: { '/api': `http://127.0.0.1:${process.env.API_PORT || 3001}` },
   },
 
 });

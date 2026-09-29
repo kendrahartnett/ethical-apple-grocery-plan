@@ -21,6 +21,7 @@
 export const GROCERY_ITEMS = [
   { id: "rice", name: "Rice", unit: "lb", price: 0.89, tags: ["vegetarian", "pantry"] },
   { id: "beans", name: "Canned Beans", unit: "can", price: 0.99, tags: ["vegetarian", "pantry"] },
+  { id: "lentils", name: "Dry Lentils", unit: "bag", price: 1.79, tags: ["vegetarian", "pantry"] },
   { id: "pasta", name: "Pasta", unit: "box", price: 1.29, tags: ["vegetarian", "pantry"] },
   { id: "tomato_sauce", name: "Tomato Sauce", unit: "jar", price: 1.49, tags: ["vegetarian", "pantry"] },
   { id: "eggs", name: "Eggs (dozen)", unit: "dozen", price: 2.79, tags: ["vegetarian"] },
@@ -29,7 +30,7 @@ export const GROCERY_ITEMS = [
   { id: "oats", name: "Oats", unit: "bag", price: 2.49, tags: ["vegetarian", "pantry"] },
   { id: "bananas", name: "Bananas", unit: "lb", price: 0.59, tags: ["vegetarian"] },
   { id: "frozen_veg", name: "Frozen Mixed Vegetables", unit: "bag", price: 1.99, tags: ["vegetarian"] },
-  { id: "chicken", name: "Chicken Thighs", unit: "lb", price: 2.49, tags: [] },
+  { id: "chicken", name: "Chicken Thighs", unit: "lb", price: 3.15, tags: [] }, // nudged toward a live Walmart price check (~$3.16/lb) done 2026-09-29
   { id: "ground_beef", name: "Ground Beef", unit: "lb", price: 4.49, tags: [] },
   { id: "tortillas", name: "Tortillas", unit: "pack", price: 2.49, tags: ["vegetarian"], daysPerUnit: 5 }, // one pack reasonably covers up to 5 days regardless of household size or how many meals use it
   { id: "cheese", name: "Shredded Cheese", unit: "bag", price: 3.49, tags: ["vegetarian"] },
@@ -39,6 +40,8 @@ export const GROCERY_ITEMS = [
   { id: "salt", name: "Salt", unit: "container", price: 0.99, tags: ["vegetarian", "pantry"] },
   { id: "potatoes", name: "Potatoes", unit: "lb", price: 0.69, tags: ["vegetarian"] },
   { id: "carrots", name: "Carrots", unit: "lb", price: 0.79, tags: ["vegetarian"] },
+  { id: "greek_yogurt", name: "Plain Greek Yogurt", unit: "tub", price: 3.28, tags: ["vegetarian"] }, // added 2026-09-29 to give high-protein plans more real headroom
+  { id: "tuna", name: "Canned Tuna (4-pack)", unit: "pack", price: 3.84, tags: [] }, // added 2026-09-29, same reason -- fish, so not tagged vegetarian
 ];
 
 // ---------------------------------------------------------------------------
@@ -53,6 +56,19 @@ export const GROCERY_ITEMS = [
 // ---------------------------------------------------------------------------
 export const MEAL_TYPES = ["breakfast", "lunch", "dinner"];
 
+// Dietary preference checklist offered on the budget form. Each meal
+// template lists which of these it satisfies in its own `dietaryTags`
+// array (alongside "vegetarian"), computed from its ingredients -- not
+// verified nutrition data, so these stay clearly labeled as preferences,
+// not medical or nutritional claims.
+export const DIETARY_PREFERENCES = [
+  { key: "highProtein", label: "High Protein" },
+  { key: "highFiber", label: "High Fiber" },
+  { key: "budgetFriendly", label: "Budget-Friendly" },
+  { key: "under30", label: "Under 30 Minutes" },
+  { key: "vegetarian", label: "Vegetarian" },
+];
+
 export const MEAL_TEMPLATES = [
   // --- Breakfasts ---------------------------------------------------------
   {
@@ -61,6 +77,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "an easy, protein-forward meal to start the day",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "budgetFriendly", "under30"],
+    prepMinutes: 15,
     pantryFriendly: true,
     ingredients: [
       { itemId: "eggs", qtyPerPerson: 0.2 },
@@ -74,6 +92,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "a warm, inexpensive way to start the day",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 8,
     pantryFriendly: true,
     ingredients: [
       { itemId: "oats", qtyPerPerson: 0.15 },
@@ -86,6 +106,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "no cooking required and ready in minutes",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "budgetFriendly", "under30"],
+    prepMinutes: 5,
     pantryFriendly: true,
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.25 },
@@ -98,6 +120,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "a heartier egg breakfast with melted cheese",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "budgetFriendly", "under30"],
+    prepMinutes: 12,
     pantryFriendly: false,
     ingredients: [
       { itemId: "eggs", qtyPerPerson: 0.25 },
@@ -111,6 +135,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "crisped potatoes and onion to start the day",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 25,
     pantryFriendly: false,
     ingredients: [
       { itemId: "potatoes", qtyPerPerson: 0.4 },
@@ -124,6 +150,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "a filling, naturally sweet twist on toast",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "budgetFriendly", "under30"],
+    prepMinutes: 5,
     pantryFriendly: true,
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.25 },
@@ -137,6 +165,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "a wrap-and-go breakfast with protein to spare",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "under30"],
+    prepMinutes: 15,
     pantryFriendly: false,
     ingredients: [
       { itemId: "eggs", qtyPerPerson: 0.2 },
@@ -151,6 +181,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "a simple skillet side that also works as a full plate",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 20,
     pantryFriendly: true,
     ingredients: [
       { itemId: "potatoes", qtyPerPerson: 0.35 },
@@ -164,6 +196,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "stick-to-your-ribs oats with a spoonful of peanut butter",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 8,
     pantryFriendly: true,
     ingredients: [
       { itemId: "oats", qtyPerPerson: 0.15 },
@@ -177,6 +211,8 @@ export const MEAL_TEMPLATES = [
     mealType: "breakfast",
     note: "a quick melt when mornings are short on time",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
+    prepMinutes: 8,
     pantryFriendly: true,
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.25 },
@@ -192,6 +228,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "no cooking required and keeps well for a packed lunch",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "budgetFriendly", "under30"],
+    prepMinutes: 5,
     pantryFriendly: true,
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.25 },
@@ -204,6 +242,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a warm, filling midday option built around pantry beans",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "under30"],
+    prepMinutes: 15,
     pantryFriendly: true,
     ingredients: [
       { itemId: "tortillas", qtyPerPerson: 2 },
@@ -217,6 +257,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a classic, budget-friendly lunch staple",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
+    prepMinutes: 10,
     pantryFriendly: true,
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.3 },
@@ -230,6 +272,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a lighter, midday take on a pantry favorite",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 20,
     pantryFriendly: true,
     ingredients: [
       { itemId: "rice", qtyPerPerson: 0.25 },
@@ -243,6 +287,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "an easy wrap built around frozen vegetables",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "under30"],
+    prepMinutes: 10,
     pantryFriendly: false,
     ingredients: [
       { itemId: "tortillas", qtyPerPerson: 1 },
@@ -256,6 +302,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a simple no-cook salad that travels well",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 10,
     pantryFriendly: true,
     ingredients: [
       { itemId: "carrots", qtyPerPerson: 0.3 },
@@ -270,6 +318,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a cold pasta dish that's easy to make ahead",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
+    prepMinutes: 20,
     pantryFriendly: true,
     ingredients: [
       { itemId: "pasta", qtyPerPerson: 0.35 },
@@ -284,6 +334,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a hearty, make-ahead lunch side or main",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly"],
+    prepMinutes: 35,
     pantryFriendly: false,
     ingredients: [
       { itemId: "potatoes", qtyPerPerson: 0.45 },
@@ -297,6 +349,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a protein-forward wrap using leftover-style chicken",
     vegetarian: false,
+    dietaryTags: ["highProtein", "under30"],
+    prepMinutes: 15,
     pantryFriendly: false,
     ingredients: [
       { itemId: "tortillas", qtyPerPerson: 1 },
@@ -310,6 +364,8 @@ export const MEAL_TEMPLATES = [
     mealType: "lunch",
     note: "a warm, simple soup built from staples",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
+    prepMinutes: 25,
     pantryFriendly: true,
     ingredients: [
       { itemId: "rice", qtyPerPerson: 0.2 },
@@ -326,6 +382,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a simple, filling pantry staple that stretches a long way",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "under30"],
+    prepMinutes: 25,
     pantryFriendly: true,
     ingredients: [
       { itemId: "rice", qtyPerPerson: 0.35 },
@@ -340,6 +398,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a quick, budget-friendly dinner with just a few ingredients",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "budgetFriendly", "under30"],
+    prepMinutes: 20,
     pantryFriendly: true,
     ingredients: [
       { itemId: "pasta", qtyPerPerson: 0.4 },
@@ -353,6 +413,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a heartier dinner built around rice you likely already have",
     vegetarian: false,
+    dietaryTags: ["highProtein", "highFiber", "under30"],
+    prepMinutes: 25,
     pantryFriendly: false,
     ingredients: [
       { itemId: "chicken", qtyPerPerson: 0.4 },
@@ -366,6 +428,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a family favorite that's easy to portion for any group size",
     vegetarian: false,
+    dietaryTags: ["highProtein", "under30"],
+    prepMinutes: 20,
     pantryFriendly: false,
     ingredients: [
       { itemId: "ground_beef", qtyPerPerson: 0.35 },
@@ -380,6 +444,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "the same easy taco format, built around pantry beans instead of meat",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "under30"],
+    prepMinutes: 15,
     pantryFriendly: true,
     ingredients: [
       { itemId: "beans", qtyPerPerson: 0.6 },
@@ -393,6 +459,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a filling skillet meal that uses a few humble vegetables well",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 25,
     pantryFriendly: false,
     ingredients: [
       { itemId: "potatoes", qtyPerPerson: 0.5 },
@@ -407,6 +475,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a one-pan dinner built around chicken and frozen vegetables",
     vegetarian: false,
+    dietaryTags: ["highProtein", "highFiber", "under30"],
+    prepMinutes: 25,
     pantryFriendly: false,
     ingredients: [
       { itemId: "chicken", qtyPerPerson: 0.4 },
@@ -422,6 +492,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a hearty stovetop dinner that stretches ground beef further",
     vegetarian: false,
+    dietaryTags: ["highProtein", "highFiber"],
+    prepMinutes: 35,
     pantryFriendly: false,
     ingredients: [
       { itemId: "ground_beef", qtyPerPerson: 0.3 },
@@ -436,6 +508,8 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a filling bowl that leans on rice and beans you likely have",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 22,
     pantryFriendly: true,
     ingredients: [
       { itemId: "rice", qtyPerPerson: 0.35 },
@@ -450,12 +524,110 @@ export const MEAL_TEMPLATES = [
     mealType: "dinner",
     note: "a simple pasta dinner rounded out with frozen vegetables",
     vegetarian: true,
+    dietaryTags: ["vegetarian", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 18,
     pantryFriendly: true,
     ingredients: [
       { itemId: "pasta", qtyPerPerson: 0.4 },
       { itemId: "frozen_veg", qtyPerPerson: 0.3 },
       { itemId: "garlic", qtyPerPerson: 0.15 },
       { itemId: "cooking_oil", qtyPerPerson: 0.04 },
+    ],
+  },
+
+  // --- Added for the Dietary Preferences checklist -------------------------
+  {
+    id: "bean_veggie_breakfast_bowl",
+    name: "Bean and Veggie Breakfast Bowl",
+    mealType: "breakfast",
+    note: "a savory, high-fiber way to start the day without eggs",
+    vegetarian: true,
+    pantryFriendly: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 15,
+    ingredients: [
+      { itemId: "beans", qtyPerPerson: 0.4 },
+      { itemId: "frozen_veg", qtyPerPerson: 0.3 },
+      { itemId: "onion", qtyPerPerson: 0.1 },
+    ],
+  },
+  {
+    id: "lentil_rice_bowl",
+    name: "Lentil and Rice Bowl",
+    mealType: "lunch",
+    note: "a filling, plant-based lunch built on a classic pantry pairing",
+    vegetarian: true,
+    pantryFriendly: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "budgetFriendly", "under30"],
+    prepMinutes: 25,
+    ingredients: [
+      { itemId: "lentils", qtyPerPerson: 0.3 },
+      { itemId: "rice", qtyPerPerson: 0.25 },
+      { itemId: "onion", qtyPerPerson: 0.1 },
+    ],
+  },
+  {
+    id: "lentil_soup",
+    name: "Lentil Soup",
+    mealType: "dinner",
+    note: "a warm, stick-to-your-ribs soup that stretches a bag of lentils far",
+    vegetarian: true,
+    pantryFriendly: true,
+    dietaryTags: ["vegetarian", "highProtein", "highFiber", "budgetFriendly"],
+    prepMinutes: 35,
+    ingredients: [
+      { itemId: "lentils", qtyPerPerson: 0.4 },
+      { itemId: "carrots", qtyPerPerson: 0.2 },
+      { itemId: "onion", qtyPerPerson: 0.15 },
+      { itemId: "garlic", qtyPerPerson: 0.1 },
+    ],
+  },
+
+  // --- Added after a live-price comparison test showed generous budgets ----
+  // --- weren't being used up; these give high-protein plans real headroom -
+  {
+    id: "greek_yogurt_protein_bowl",
+    name: "Greek Yogurt Protein Bowl",
+    mealType: "breakfast",
+    note: "a no-cook, protein-dense way to start the day",
+    vegetarian: true,
+    pantryFriendly: false,
+    dietaryTags: ["vegetarian", "highProtein", "under30"],
+    prepMinutes: 5,
+    ingredients: [
+      { itemId: "greek_yogurt", qtyPerPerson: 0.3 },
+      { itemId: "peanut_butter", qtyPerPerson: 0.08 },
+      { itemId: "bananas", qtyPerPerson: 0.5 },
+    ],
+  },
+  {
+    id: "tuna_rice_bowl",
+    name: "Tuna and Rice Bowl",
+    mealType: "lunch",
+    note: "a filling, protein-forward lunch built around canned tuna",
+    vegetarian: false,
+    pantryFriendly: false,
+    dietaryTags: ["highProtein", "highFiber", "under30"],
+    prepMinutes: 20,
+    ingredients: [
+      { itemId: "tuna", qtyPerPerson: 0.5 },
+      { itemId: "rice", qtyPerPerson: 0.25 },
+      { itemId: "frozen_veg", qtyPerPerson: 0.2 },
+    ],
+  },
+  {
+    id: "grilled_chicken_broccoli_bowl",
+    name: "Grilled Chicken and Broccoli Bowl",
+    mealType: "dinner",
+    note: "a heartier, protein-forward dinner with a bigger portion of chicken",
+    vegetarian: false,
+    pantryFriendly: false,
+    dietaryTags: ["highProtein", "highFiber", "under30"],
+    prepMinutes: 28,
+    ingredients: [
+      { itemId: "chicken", qtyPerPerson: 0.4 },
+      { itemId: "frozen_veg", qtyPerPerson: 0.35 },
+      { itemId: "rice", qtyPerPerson: 0.3 },
     ],
   },
 ];
@@ -467,6 +639,9 @@ export const MEAL_TEMPLATES = [
 // shopping list this store type is assumed to carry — both are
 // illustrative, not live retailer data.
 // ---------------------------------------------------------------------------
+// Scope worksheet caps this at 3 Chicago stores. Kept: a discount grocer, a
+// full-service chain, and a local market, to preserve variety across price
+// point and coverage while trimming from the earlier 6-store list.
 export const STORES = [
   {
     id: "aldi_logan_square",
@@ -485,33 +660,6 @@ export const STORES = [
     priceMultiplier: 1.05,
     coverage: 1,
     sampleDistanceMiles: 2.4,
-  },
-  {
-    id: "food4less_pilsen",
-    name: "Food 4 Less (Pilsen)",
-    address: "3220 W 26th St, Chicago, IL",
-    detail: "A balanced sample option for everyday pantry and fresh items.",
-    priceMultiplier: 0.92,
-    coverage: 0.9,
-    sampleDistanceMiles: 3.6,
-  },
-  {
-    id: "walmart_north_ave",
-    name: "Walmart Supercenter (North Ave)",
-    address: "4626 W North Ave, Chicago, IL 60639",
-    detail: "A sample big-box store with the lowest prices and full coverage.",
-    priceMultiplier: 0.80,
-    coverage: 1.0,
-    sampleDistanceMiles: 1.8,
-  },
-  {
-    id: "target_logan_square",
-    name: "Target (Logan Square/Milwaukee Ave)",
-    address: "2434 N. Sacramento Ave, Chicago, IL 60647",
-    detail: "A sample big-box grocery aisle with broad selection.",
-    priceMultiplier: 0.95,
-    coverage: 0.9,
-    sampleDistanceMiles: 1.1,
   },
   {
     id: "rico_fresh_market",

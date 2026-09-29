@@ -1,5 +1,11 @@
 # Ethical Apple
 
+## Local AI and pricing integration
+
+Run `npm run dev` to start the frontend and local planning API together. Ollama uses the backend `OLLAMA_MODEL` setting. Sample-price mode works without a grocery API key; reported-price mode requires a backend credential and reviewed product mappings. See [setup, limitations, and deployment notes](docs/ollama-integration.md). Run `npm test` and `npm run build` to verify changes.
+
+The Version 1 description below documents the original sample-only implementation; the local flow now uses a backend-validated plan.
+
 ![Ethical Apple landing page](docs/landing-page.png)
 
 🚧 [View Live App](ethical-apple-grocery-plan.vercel.app)

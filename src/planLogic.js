@@ -14,6 +14,11 @@ import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES, STORES } from "./data.js";
 // day is the floor for even the cheapest staples across three meals a day.
 const MIN_PER_PERSON_PER_DAY = 4.5;
 
+// Scope worksheet safeguard: build the plan to about 85-90% of budget, not
+// the full amount, so there's a buffer if real prices run higher than the
+// sample data. 0.875 is the midpoint of that range.
+const BUDGET_BUFFER_FRACTION = 0.875;
+
 /**
  * Parse the "already on hand" free-text field into a Set of GROCERY_ITEMS
  * ids, matched loosely by name. Anything typed that doesn't match a known
@@ -103,9 +108,13 @@ function buildShoppingList(meals, householdSize, onHandIds, days) {
  *
  * Returns { meals, shoppingList, totalCost, infeasible, infeasibleReason }
  */
-export function generatePlan({ budget, householdSize, days, onHandIds, vegetarianOnly }) {
+export function generatePlan({ budget, householdSize, days, onHandIds, dietaryPreferences = [] }) {
   const budgetPerDay = budget / days;
   const budgetPerPersonPerDay = budgetPerDay / householdSize;
+  // The buffer target the plan aims for; the full budget is still the hard
+  // ceiling used for the realism check and the final infeasibility check
+  // below.
+  const targetBudget = budget * BUDGET_BUFFER_FRACTION;
 
   if (budgetPerPersonPerDay < MIN_PER_PERSON_PER_DAY) {
     return {
@@ -121,7 +130,12 @@ export function generatePlan({ budget, householdSize, days, onHandIds, vegetaria
     };
   }
 
-  let candidates = MEAL_TEMPLATES.filter((m) => !vegetarianOnly || m.vegetarian);
+  // Dietary Preferences checklist: a meal is a candidate only if it carries
+  // every preference the user checked, in its own `dietaryTags` array. With
+  // nothing checked, every meal is a candidate (Version 1 behavior).
+  let candidates = dietaryPreferences.length
+    ? MEAL_TEMPLATES.filter((m) => dietaryPreferences.every((pref) => (m.dietaryTags || []).includes(pref)))
+    : MEAL_TEMPLATES.slice();
 
   const onHandScore = (meal) => meal.ingredients.filter((ing) => onHandIds.has(ing.itemId)).length;
 
@@ -145,7 +159,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds, vegetaria
       shoppingList: [],
       totalCost: 0,
       infeasible: true,
-      infeasibleReason: "No meals in the current dataset fit the dietary preference selected. Try a different dietary option.",
+      infeasibleReason: "No meals in the current dataset fit every dietary preference checked. Try unchecking one to see more options.",
     };
   }
 
@@ -162,6 +176,42 @@ export function generatePlan({ budget, householdSize, days, onHandIds, vegetaria
 
   let { shoppingList, totalCost } = buildShoppingList(selectedMeals, householdSize, onHandIds, days);
 
+  // If the initial (cheapest-first) plan leaves a lot of the budget unused,
+  // swap in pricier, more varied meals from the same eligible set -- the
+  // mirror image of the over-budget substitution below, but upward -- so a
+  // generous budget actually gets used instead of always settling near the
+  // cheapest possible plan. This never pushes the total past targetBudget,
+  // so it can't undo the budget-buffer safeguard.
+  if (totalCost < targetBudget * 0.7) {
+    const priciestByType = {};
+    const upgradeIndex = {};
+    MEAL_TYPES.forEach((type) => {
+      priciestByType[type] = byType[type]
+        .slice()
+        .sort((a, b) => mealCost(b, householdSize, onHandIds) - mealCost(a, householdSize, onHandIds));
+      upgradeIndex[type] = 0;
+    });
+
+    for (let i = 0; i < selectedMeals.length; i++) {
+      if (totalCost >= targetBudget) break;
+      const type = selectedMeals[i].mealType;
+      const options = priciestByType[type];
+      if (!options.length) continue;
+      const candidate = options[upgradeIndex[type] % options.length];
+      upgradeIndex[type]++;
+      if (candidate.id === selectedMeals[i].id) continue;
+
+      const trial = selectedMeals.slice();
+      trial[i] = candidate;
+      const rebuilt = buildShoppingList(trial, householdSize, onHandIds, days);
+      if (rebuilt.totalCost > targetBudget) continue; // would overshoot the buffer target -- skip this swap
+
+      selectedMeals = trial;
+      shoppingList = rebuilt.shoppingList;
+      totalCost = rebuilt.totalCost;
+    }
+  }
+
   // If over budget, substitute the priciest non-pantry-friendly meals with
   // cheaper pantry-friendly meals of the SAME type (swapping a dinner for a
   // pantry-friendly dinner, not a breakfast) until it fits, or until
@@ -174,7 +224,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds, vegetaria
     substitutionCounts[type] = 0;
   });
 
-  while (totalCost > budget && attempts < selectedMeals.length) {
+  while (totalCost > targetBudget && attempts < selectedMeals.length) {
     let worstIndex = -1;
     let worstCost = -1;
     selectedMeals.forEach((meal, idx) => {
@@ -247,8 +297,10 @@ export function computeStoreResults(shoppingList) {
 }
 
 /**
- * sortBy matches the data-store-sort values already used in the Replit
- * markup: "cost" | "distance" | "one-stop" | "balanced".
+ * sortBy matches the data-store-sort values used in the markup: "cost" |
+ * "distance". The scope worksheet caps store sorting at these two options
+ * ("lowest cost" and "closest") — one-stop and balanced sorting are
+ * deliberately out of scope.
  */
 export function sortStoreResults(results, sortBy) {
   const sorted = results.slice();
@@ -256,24 +308,29 @@ export function sortStoreResults(results, sortBy) {
   switch (sortBy) {
     case "distance":
       return sorted.sort((a, b) => a.distance - b.distance || a.estimate - b.estimate);
-    case "one-stop":
-      return sorted.sort((a, b) => b.coveredItems - a.coveredItems || a.estimate - b.estimate);
-    case "balanced": {
-      const costs = sorted.map((s) => s.estimate);
-      const distances = sorted.map((s) => s.distance);
-      const minCost = Math.min(...costs);
-      const maxCost = Math.max(...costs);
-      const minDistance = Math.min(...distances);
-      const maxDistance = Math.max(...distances);
-      const normalized = (value, min, max) => (max === min ? 0 : (value - min) / (max - min));
-      return sorted.sort((a, b) => {
-        const scoreA = normalized(a.estimate, minCost, maxCost) * 0.55 + normalized(a.distance, minDistance, maxDistance) * 0.45;
-        const scoreB = normalized(b.estimate, minCost, maxCost) * 0.55 + normalized(b.distance, minDistance, maxDistance) * 0.45;
-        return scoreA - scoreB;
-      });
-    }
     case "cost":
     default:
       return sorted.sort((a, b) => a.estimate - b.estimate);
   }
+}
+
+// Real prices are only estimated, so a lead this small is noise, not a
+// trustworthy "cheapest" claim. Matches the scope worksheet's Manage
+// safeguard: don't name a cheapest store when the gap between stores is
+// smaller than the data's likely error (the same ~12.5% margin used for the
+// displayed price ranges).
+export const PRICE_ERROR_MARGIN = 0.125;
+
+/**
+ * True when the lowest-cost store's estimate isn't clearly ahead of the
+ * next cheapest one -- i.e. the gap is within the likely pricing error, so
+ * calling it "cheapest" would overstate what the sample data can support.
+ */
+export function isCheapestTooCloseToCall(results) {
+  if (results.length < 2) return false;
+  const sortedByCost = results.slice().sort((a, b) => a.estimate - b.estimate);
+  const [lowest, nextLowest] = sortedByCost;
+  if (lowest.estimate <= 0) return false;
+  const gap = (nextLowest.estimate - lowest.estimate) / lowest.estimate;
+  return gap < PRICE_ERROR_MARGIN;
 }
