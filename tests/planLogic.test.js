@@ -25,11 +25,11 @@ test('a normal plan builds one breakfast, lunch, and dinner per day within budge
   assert.ok(plan.totalCost <= baseForm.budget);
 });
 
-test('an unrealistically small budget is reported infeasible with no meals', () => {
+test('an unaffordable sample-price plan is reported infeasible', () => {
   const plan = generatePlan({ ...baseForm, budget: 1, householdSize: 20, days: 14 });
   assert.equal(plan.infeasible, true);
-  assert.deepEqual(plan.meals, []);
-  assert.deepEqual(plan.shoppingList, []);
+  assert.match(plan.infeasibleReason, /could not find a meal plan/);
+  assert.match(plan.infeasibleReason, /does not mean feeding your household on that budget is impossible/);
 });
 
 test('dietary preferences filter which meals can be selected', () => {
@@ -47,10 +47,45 @@ test('a verified pantry quantity reduces cost; typing the name alone does not', 
   assert.ok(quantifiedItem && quantifiedItem.pantryMatch, 'a large verified pantry quantity should fully cover the item');
 });
 
-test('bulk staples (bread, tortillas) scale with plan length, not per-meal usage', () => {
-  const plan = generatePlan({ ...baseForm, days: 5, householdSize: 4 });
-  const bread = plan.shoppingList.find(i => i.itemId === 'bread');
-  if (bread && !bread.pantryMatch) assert.equal(bread.qty, 1, 'a 5-day plan should need only 1 loaf regardless of household size');
+test('bread loaves and tortilla packs cover the selected recipes for the whole household', () => {
+  const plans = [
+    generatePlan({ ...baseForm, budget: 10000, days: 1, householdSize: 20 }),
+    generatePlan({ ...baseForm, budget: 35, days: 4, householdSize: 3 }),
+  ];
+  assert.ok(plans.some(plan => plan.shoppingList.some(line => line.itemId === 'bread')));
+  assert.ok(plans.some(plan => plan.shoppingList.some(line => line.itemId === 'tortillas')));
+  for (const plan of plans) {
+    const householdSize = plan === plans[0] ? 20 : 3;
+    for (const itemId of ['bread', 'tortillas']) {
+      const required = plan.meals.reduce((sum, meal) => sum + meal.ingredients
+        .filter(ing => ing.itemId === itemId)
+        .reduce((subtotal, ing) => subtotal + ing.qtyPerPerson * householdSize, 0), 0);
+      const line = plan.shoppingList.find(i => i.itemId === itemId);
+      if (required > 0) {
+        const unitsPerPackage = GROCERY_ITEMS.find(i => i.id === itemId).unitsPerPackage || 1;
+        assert.equal(line.qty, Math.ceil(required / unitsPerPackage));
+      }
+    }
+  }
+});
+
+test('entered tortillas cover individual tortillas before packs are calculated', () => {
+  const form = { ...baseForm, budget: 10000, days: 1, householdSize: 20 };
+  const withoutPantry = generatePlan(form);
+  const needed = withoutPantry.meals.reduce((sum, meal) => sum + meal.ingredients
+    .filter(ing => ing.itemId === 'tortillas')
+    .reduce((subtotal, ing) => subtotal + ing.qtyPerPerson * 20, 0), 0);
+  if (needed > 0) {
+    const withPantry = generatePlan({ ...form, pantry: { tortillas: needed } });
+    assert.equal(withPantry.shoppingList.find(i => i.itemId === 'tortillas').pantryMatch, true);
+  }
+});
+
+test('a low cash budget can use entered pantry quantities', () => {
+  const pantry = Object.fromEntries(GROCERY_ITEMS.map(item => [item.id, 1000]));
+  const plan = generatePlan({ ...baseForm, budget: 1, pantry });
+  assert.equal(plan.infeasible, false);
+  assert.equal(plan.totalCost, 0);
 });
 
 test('the plan never exceeds the stated budget', () => {

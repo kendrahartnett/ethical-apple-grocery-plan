@@ -34,16 +34,6 @@ function money(value) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(value);
 }
 
-/**
- * Totals are shown as a range, not a single number, per the scope
- * worksheet's safeguard: real prices could run higher than the sample
- * data, so a specific dollar figure overstates what the estimate can
- * actually guarantee.
- */
-function moneyRange(value) {
-  return money(value);
-}
-
 function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, character => ({
     '&': '&amp;',
@@ -89,7 +79,7 @@ function homeView() {
             <button class="primary-button" type="button" data-action="go-setup">Build my grocery plan ${icons.arrow}</button>
             <a class="secondary-button" href="#how-it-works">See how it works ${icons.arrow}</a>
           </div>
-          <p class="hero-note">${icons.check} A sample plan in about two minutes</p>
+          <p class="hero-note">${icons.check} A sample plan built in your browser</p>
         </div>
         <div class="hero-art" aria-label="Illustration of a colorful planned meal">
           <div class="art-blob"></div>
@@ -150,7 +140,7 @@ function setupView() {
           </div>
             <div class="field"><label for="on-hand">Ingredients you would like to use</label><input id="on-hand" name="onHand" type="text" maxlength="1000" value="${escapeHTML(f.onHand)}" placeholder="rice, beans, frozen spinach"><small>Names guide meal choices. Enter quantities below to reduce purchases; unknown amounts are not treated as free food.</small></div>
           <details><summary>Pantry quantities (optional)</summary><p>Enter usable amounts in the units shown. Leave zero when uncertain. Package-based units refer to the reference sizes used by your ingredient catalog.</p><div class="form-grid">
-            ${GROCERY_ITEMS.map(i => `<div class="field"><label for="pantry-${i.id}">${escapeHTML(i.name)} (${i.id === 'tortillas' ? 'individual tortillas' : escapeHTML(i.unit)})</label><input id="pantry-${i.id}" name="pantry-${i.id}" type="number" min="0" max="1000" step="0.01" value="${f.pantry[i.id] || 0}"></div>`).join('')}
+            ${GROCERY_ITEMS.map(i => `<div class="field"><label for="pantry-${i.id}">${escapeHTML(i.name)} (${i.id === 'tortillas' ? 'individual tortillas; sample pack has 10' : escapeHTML(i.unit)})</label><input id="pantry-${i.id}" name="pantry-${i.id}" type="number" min="0" max="1000" step="0.01" value="${f.pantry[i.id] || 0}"></div>`).join('')}
           </div></details>
           <hr class="form-divider">
           <p class="form-section-label">The way you like to eat</p>
@@ -207,7 +197,7 @@ function buildShoppingListText(plan, form) {
     lines.push(`${item.name} — ${item.quantity}${suffix}`);
   });
   lines.push('');
-  lines.push(`Estimated shopping total: ${moneyRange(plan.totalCost)}`);
+  lines.push(`Estimated shopping total: ${money(plan.totalCost)}`);
   lines.push(`Budget: ${money(form.budget)}`);
   return lines.join('\n');
 }
@@ -215,8 +205,8 @@ function buildShoppingListText(plan, form) {
 const supportsShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
 const STORE_SORT_OPTIONS = [
-  { key: 'cost', title: 'Lowest Grocery Cost', detail: 'Put the lowest estimated basket first.' },
-  { key: 'distance', title: 'Closest Store', detail: 'Put the shortest sample distance first.' },
+  { key: 'cost', title: 'Lowest Sample Cost', detail: 'Put the lowest illustrative basket first.' },
+  { key: 'distance', title: 'Shortest Sample Distance', detail: 'Put the shortest fixed example distance first.' },
 ];
 
 function downloadPlanText(text) {
@@ -252,7 +242,7 @@ function overviewView() {
     <main class="app-main">
       <div class="plan-summary">
         <div class="page-heading"><div class="section-kicker">Your grocery and meal plan</div><h1>A week with a little more ease.</h1><p>${state.form.days} ${state.form.days == 1 ? 'day' : 'days'} of meals for ${state.form.household} ${state.form.household == 1 ? 'person' : 'people'}, shaped around ${state.form.dietaryPreferences.length ? escapeHTML(state.form.dietaryPreferences.map(key => (DIETARY_PREFERENCES.find(p => p.key === key) || {}).label || key).join(', ').toLowerCase()) : 'your'} preferences and what is already in the kitchen.</p></div>
-        ${plan.infeasible ? '' : `<div class="summary-meta">Estimate ${moneyRange(plan.totalCost)} · budget ${money(state.form.budget)}</div>`}
+        ${plan.infeasible ? '' : `<div class="summary-meta">Estimate ${money(plan.totalCost)} · budget ${money(state.form.budget)}</div>`}
       </div>
       <p class="estimate-disclosure">Rule-based meal plan. Prices are illustrative samples, not live store quotes.</p>
       ${plan.infeasible ? `<div class="budget-warning" role="alert">${icons.info}<div><strong>Heads up:</strong> ${escapeHTML(plan.infeasibleReason)}</div></div>
@@ -260,7 +250,7 @@ function overviewView() {
       <div class="plan-layout">
         <section class="panel meal-panel" aria-labelledby="meals-title">
           <div class="panel-heading"><h2 id="meals-title">Meals for the week</h2><span>${state.form.days} ${state.form.days == 1 ? 'day' : 'days'} · ${plan.meals.length} meals</span></div>
-          <div class="meal-stack">${chunkMealsByDay(plan.meals).map((dayMeals, dayIndex) => `<div class="day-group"><div class="day-group-heading">Day ${dayIndex + 1}</div>${dayMeals.map(meal => `<article class="day-meal"><div class="day-label">${MEAL_TYPE_LABELS[meal.mealType] || ''}</div><div><h3>${escapeHTML(meal.name)}</h3><p>${escapeHTML(meal.note || '')}.</p><details><summary>Ingredients for ${state.form.household} people</summary><ul>${meal.ingredients.map(i => { const item = GROCERY_ITEMS.find(g => g.id === i.itemId); return `<li>${escapeHTML(item ? item.name : i.itemId)}: ${(i.qtyPerPerson * state.form.household).toFixed(2)} ${escapeHTML(item ? item.unit : '')}</li>`; }).join('')}</ul></details></div></article>`).join('')}</div>`).join('')}</div>
+          <div class="meal-stack">${chunkMealsByDay(plan.meals).map((dayMeals, dayIndex) => `<div class="day-group"><div class="day-group-heading">Day ${dayIndex + 1}</div>${dayMeals.map(meal => `<article class="day-meal"><div class="day-label">${MEAL_TYPE_LABELS[meal.mealType] || ''}</div><div><h3>${escapeHTML(meal.name)}</h3><p>${escapeHTML(meal.note || '')}.</p><details><summary>Ingredients for ${state.form.household} people</summary><ul>${meal.ingredients.map(i => { const item = GROCERY_ITEMS.find(g => g.id === i.itemId); return `<li>${escapeHTML(item ? item.name : i.itemId)}: ${(i.qtyPerPerson * state.form.household).toFixed(2)} ${escapeHTML(item ? (item.id === 'tortillas' ? 'individual tortillas' : item.unit) : '')}</li>`; }).join('')}</ul></details></div></article>`).join('')}</div>`).join('')}</div>
         </section>
         <section class="panel shopping-panel" aria-labelledby="shopping-title">
           <div class="panel-heading"><h2 id="shopping-title">Shopping list</h2><span>sample prices</span></div>
@@ -268,7 +258,7 @@ function overviewView() {
             <caption>Whole packages after subtracting entered pantry quantities.</caption>
             <thead><tr><th scope="col">Item</th><th scope="col">Quantity</th><th scope="col">Estimated cost</th></tr></thead>
             <tbody>${plan.shoppingList.map(item => `<tr><td>${escapeHTML(item.name)}${item.pantryMatch ? ' <small>(on hand)</small>' : ''}</td><td>${escapeHTML(item.quantity)}</td><td>${money(item.estimatedCost)}</td></tr>`).join('')}</tbody>
-            <tfoot><tr><td colspan="2">Estimated shopping total</td><td>${moneyRange(plan.totalCost)}</td></tr></tfoot>
+            <tfoot><tr><td colspan="2">Estimated shopping total</td><td>${money(plan.totalCost)}</td></tr></tfoot>
           </table>
           <p class="estimate-disclosure">${icons.info}<span>This subtotal fits the entered budget at the displayed prices. Taxes, fees and checkout changes are not included. Dietary tags are preferences, not verified nutrition or allergy guidance.</span></p>
           <div class="plan-actions" role="group" aria-label="Save or share this plan">
@@ -283,7 +273,7 @@ function overviewView() {
         const sortedResults = sortStoreResults(storeResults, state.storeSort);
         const suppressCheapest = state.storeSort === 'cost' && isCheapestTooCloseToCall(storeResults);
         return `<section class="nearby-stores" aria-labelledby="nearby-stores-title">
-        <div class="nearby-stores__heading"><div><div class="section-kicker">Where to shop</div><h2 id="nearby-stores-title">Compare nearby Chicago stores</h2></div><p>Sample basket estimates for this plan. Check each store for current hours, stock, and prices.</p></div>
+        <div class="nearby-stores__heading"><div><div class="section-kicker">Where to shop</div><h2 id="nearby-stores-title">Explore nearby Chicago stores</h2></div><p>Illustrative comparison only: each basket uses the same catalog prices with a fixed store-wide multiplier, not observed prices at these stores. Distances are fixed examples. Check current hours, stock, and prices before shopping.</p></div>
         <div class="sort-options" role="group" aria-label="Sort store results">
           ${STORE_SORT_OPTIONS.map(option => `<button class="sort-option ${state.storeSort === option.key ? 'sort-option--active' : ''}" type="button" data-store-sort="${option.key}" aria-pressed="${state.storeSort === option.key}"><span class="sort-option__check" aria-hidden="true">${state.storeSort === option.key ? icons.check : ''}</span><span class="sort-option__copy"><strong>${escapeHTML(option.title)}</strong><small>${escapeHTML(option.detail)}</small></span></button>`).join('')}
         </div>
@@ -293,8 +283,8 @@ function overviewView() {
           const eyebrow = isTop ? (state.storeSort === 'cost' ? (showCheapestLabel ? 'Lowest estimate' : 'Close estimates — see note below') : 'Closest store') : store.area;
           return `<article class="panel nearby-store ${isTop ? 'nearby-store--top' : ''}"><span class="nearby-store__area">${escapeHTML(eyebrow)}</span><h3>${escapeHTML(store.name)}</h3><p>${escapeHTML(store.detail)}</p>
             <div class="nearby-store__metrics">
-              <div class="nearby-store__metric"><span>Basket estimate</span><strong>${moneyRange(store.estimate)}</strong></div>
-              <div class="nearby-store__metric"><span>Distance</span><strong>${store.distance.toFixed(1)} mi</strong><small>sample, straight-line</small></div>
+              <div class="nearby-store__metric"><span>Basket estimate</span><strong>${money(store.estimate)}</strong></div>
+              <div class="nearby-store__metric"><span>Sample distance</span><strong>${store.distance.toFixed(1)} mi</strong><small>fixed example</small></div>
             </div>
             <p class="nearby-store__address">${escapeHTML(store.address)}</p>
             <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}" target="_blank" rel="noopener noreferrer" aria-label="Get directions to ${escapeHTML(store.name)}">Get directions ${icons.arrow}</a>

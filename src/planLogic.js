@@ -11,10 +11,6 @@
 
 import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES, STORES } from "./data.js";
 
-// Roughly $1.30 (breakfast) + $1.30 (lunch) + $1.90 (dinner) per person per
-// day is the floor for even the cheapest staples across three meals a day.
-const MIN_PER_PERSON_PER_DAY = 4.5;
-
 // Scope worksheet safeguard: build the plan to about 85-90% of budget, not
 // the full amount, so there's a buffer if real prices run higher than the
 // sample data. 0.875 is the midpoint of that range.
@@ -60,7 +56,7 @@ function mealCost(meal, householdSize, onHandIds) {
     if (onHandIds.has(ing.itemId)) return sum; // already have it, no added cost
     const item = GROCERY_ITEMS.find((g) => g.id === ing.itemId);
     if (!item) return sum;
-    return sum + item.price * ing.qtyPerPerson * householdSize;
+    return sum + item.price * ing.qtyPerPerson * householdSize / (item.unitsPerPackage || 1);
   }, 0);
 }
 
@@ -71,14 +67,11 @@ function mealCost(meal, householdSize, onHandIds) {
  * an ingredient's name in the free-text "on hand" field is a preference
  * signal for meal selection only, never a free supply.
  *
- * A few staples (bread, tortillas) are bought in bulk units that
- * realistically cover several days on their own, no matter how many meals
- * use them or how large the household is (one loaf of bread, one pack of
- * tortillas). Those items carry a `daysPerUnit` on GROCERY_ITEMS: the
- * "required" quantity is a whole number of units based on plan length,
- * and pantry quantities for those items are treated as units on hand.
+ * Recipe quantities and pantry quantities use the same units. An item with
+ * unitsPerPackage (tortillas) is purchased as enough whole packs to cover
+ * the remaining individual units after pantry quantities are subtracted.
  */
-function buildShoppingList(meals, householdSize, pantry, days) {
+function buildShoppingList(meals, householdSize, pantry) {
   const quantities = {}; // itemId -> total raw qty needed across the whole plan
 
   meals.forEach((meal) => {
@@ -96,10 +89,9 @@ function buildShoppingList(meals, householdSize, pantry, days) {
     if (!item) return;
 
     const pantryQty = Math.max(0, Number(pantry?.[itemId]) || 0);
-    const requiredQty = item.daysPerUnit ? Math.max(1, Math.ceil(days / item.daysPerUnit)) : qty;
-    const neededQty = Math.max(0, requiredQty - pantryQty);
+    const neededQty = Math.max(0, qty - pantryQty);
     const pantryMatch = neededQty < 1e-8;
-    const roundedQty = pantryMatch ? 0 : Math.max(1, Math.ceil(neededQty - 1e-8));
+    const roundedQty = pantryMatch ? 0 : Math.max(1, Math.ceil(neededQty / (item.unitsPerPackage || 1) - 1e-8));
     const estimatedCost = pantryMatch ? 0 : roundedQty * item.price;
     if (!pantryMatch) totalCost += estimatedCost;
 
@@ -109,7 +101,7 @@ function buildShoppingList(meals, householdSize, pantry, days) {
       unit: item.unit,
       qty: roundedQty,
       pantryMatch,
-      quantity: pantryMatch ? "on hand" : `${roundedQty} ${item.unit}${roundedQty === 1 ? "" : "s"}`,
+      quantity: pantryMatch ? "on hand" : `${roundedQty} ${roundedQty === 1 ? item.unit : item.unit === "loaf" ? "loaves" : `${item.unit}s`}`,
       estimatedCost,
     });
   });
@@ -131,26 +123,9 @@ function buildShoppingList(meals, householdSize, pantry, days) {
  * Returns { meals, shoppingList, totalCost, infeasible, infeasibleReason }
  */
 export function generatePlan({ budget, householdSize, days, onHandIds = new Set(), pantry = {}, dietaryPreferences = [] }) {
-  const budgetPerDay = budget / days;
-  const budgetPerPersonPerDay = budgetPerDay / householdSize;
   // The buffer target the plan aims for; the full budget is still the hard
-  // ceiling used for the realism check and the final infeasibility check
-  // below.
+  // ceiling used for the final feasibility check below.
   const targetBudget = budget * BUDGET_BUFFER_FRACTION;
-
-  if (budgetPerPersonPerDay < MIN_PER_PERSON_PER_DAY) {
-    return {
-      meals: [],
-      shoppingList: [],
-      totalCost: 0,
-      infeasible: true,
-      infeasibleReason: `$${budget.toFixed(2)} for ${householdSize} ${
-        householdSize === 1 ? "person" : "people"
-      } over ${days} day${days === 1 ? "" : "s"} works out to about $${budgetPerPersonPerDay.toFixed(
-        2
-      )} per person per day, which isn't realistically enough even for the cheapest staples. Try a larger budget, fewer days, or a smaller household size.`,
-    };
-  }
 
   // Dietary Preferences checklist: a meal is a candidate only if it carries
   // every preference the user checked, in its own `dietaryTags` array. With
@@ -197,7 +172,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds = new Set(
     });
   }
 
-  let { shoppingList, totalCost } = buildShoppingList(selectedMeals, householdSize, pantry, days);
+  let { shoppingList, totalCost } = buildShoppingList(selectedMeals, householdSize, pantry);
 
   // If the initial (cheapest-first) plan leaves a lot of the budget unused,
   // swap in pricier, more varied meals from the same eligible set -- the
@@ -226,7 +201,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds = new Set(
 
       const trial = selectedMeals.slice();
       trial[i] = candidate;
-      const rebuilt = buildShoppingList(trial, householdSize, pantry, days);
+      const rebuilt = buildShoppingList(trial, householdSize, pantry);
       if (rebuilt.totalCost > targetBudget) continue; // would overshoot the buffer target -- skip this swap
 
       selectedMeals = trial;
@@ -269,7 +244,7 @@ export function generatePlan({ budget, householdSize, days, onHandIds = new Set(
     selectedMeals[worstIndex] = replacement;
     substitutionCounts[type]++;
 
-    const rebuilt = buildShoppingList(selectedMeals, householdSize, pantry, days);
+    const rebuilt = buildShoppingList(selectedMeals, householdSize, pantry);
     shoppingList = rebuilt.shoppingList;
     totalCost = rebuilt.totalCost;
     attempts++;
@@ -281,9 +256,9 @@ export function generatePlan({ budget, householdSize, days, onHandIds = new Set(
       shoppingList,
       totalCost,
       infeasible: true,
-      infeasibleReason: `Even after substituting cheaper meals, the estimated total ($${totalCost.toFixed(
+      infeasibleReason: `This planner could not find a meal plan within your $${budget.toFixed(2)} budget using its sample prices. Its current plan estimates $${totalCost.toFixed(
         2
-      )}) is above your $${budget.toFixed(2)} budget. Consider a larger budget or fewer days.`,
+      )}. Pantry quantities, different meals, fewer days, or a larger budget may help. This does not mean feeding your household on that budget is impossible.`,
     };
   }
 
@@ -340,8 +315,7 @@ export function sortStoreResults(results, sortBy) {
 // Real prices are only estimated, so a lead this small is noise, not a
 // trustworthy "cheapest" claim. Matches scope-worksheet.md's safeguard:
 // don't name a cheapest store when the gap between stores is smaller than
-// the data's likely error (the same ~12.5% margin used for the displayed
-// price ranges).
+// a 12.5% caution threshold. This is a design choice, not a measured error rate.
 export const PRICE_ERROR_MARGIN = 0.125;
 
 /**

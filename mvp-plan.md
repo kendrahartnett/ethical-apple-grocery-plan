@@ -1,139 +1,94 @@
 # Ethical Apple — MVP Plan
 
-**Program:** Next Chapter Project — Week 3, Phase 1 Gate ("The AI-Built Solution")
+**Program:** Next Chapter Project — Week 3, Phase 1 Gate
+
 **Author:** Kendra Hartnett
-**Status:** Version 1 built and in active refinement. Scope is locked to `scope-worksheet.md` — this document mirrors that scope exactly and adds the fuller build detail (architecture, user stories, future plans) around it.
 
----
+**Status:** Final browser-based prototype. The [scope worksheet](scope-worksheet.md) is the source of truth for the current scope; this plan explains the user journey, implementation, testing, and next steps.
 
-## 1. Problem Statement
+## Problem and intended user
 
-People in Chicago shopping on very limited grocery budgets often can't tell how to turn the money they have into enough meals to last until they can shop again. They have to balance budget, household size, days to cover, food already at home, and prices, and that leads to overspending, wasted food, or a cart that doesn't stretch far enough.
+People shopping on tight grocery budgets must decide what meals will cover their household until the next shopping trip, which ingredients they still need, and whether those purchases might fit the money available. Budget, household size, days to cover, food already at home, and prices all affect the decision.
 
-### Supporting research
-- USDA: affordability is the most common barrier to a healthy diet reported by SNAP participants (61% of those surveyed).
-- Feeding America 2026 survey: 68% of surveyed neighbors wanted to eat healthier but couldn't currently afford to.
-- Feeding America 2025 survey: 80% of surveyed neighbors bought cheaper, less nutritious food due to high prices; 52% ran out of food before they could buy more at some point in the past year.
-- USDA Economic Research Service: distance and transportation affect which food retailers households can reach and the time/cost required to shop, compounding the budgeting problem.
+Maria is an **illustrative user**, not a research participant: she has two kids, $35, and needs food to last until Friday. Her question is, “What meals can I make, what do I need to buy, and will it fit?” Today she might plan meals, write a list, estimate costs, remove items that exceed her budget, and then discover a different total at checkout. Ethical Apple helps with the planning steps; its sample prices cannot promise a checkout result.
 
-### The user journey this is built around — Maria
-Maria, a parent with $35, two kids, and until Friday, is the example. She already has rice, cooking oil, and a few basic seasonings. Her real question isn't "where's the nearest grocery store" — it's **"what can I buy with $35 that will actually get my family through to Friday?"**
+## Solution and completed scope
 
-Her current, manual journey: $35 left → figure out meals → figure out ingredients → estimate prices → decide where to shop → remove things that exceed budget → make substitutions → shop → hope the total isn't higher than expected. Every one of those steps is a place the plan can quietly fall apart.
+Ethical Apple starts with a household's total grocery budget and builds a three-meals-per-day plan, an itemized shopping list, and sample basket comparisons for three nearby Chicago stores. It is a static website built with HTML, CSS, and JavaScript. The final app has no backend, live price API, or AI model at runtime.
 
----
+The app has **three screens**:
 
-## 2. Solution (one sentence)
+1. **Landing page:** explains the purpose and opens the planner.
+2. **Form:** collects budget, household size, days, dietary preferences, ingredients the user would like to use, and optional pantry quantities.
+3. **Results page:** shows breakfast, lunch, and dinner for each day; the shopping list and estimated total; and a store-comparison section. The grocery list and budget totals can be downloaded, copied, or shared.
 
-Ethical Apple turns a Chicago user's grocery budget into a simple meal and shopping plan, then compares estimated prices at a few nearby stores.
+The ingredient catalog currently has **41 items** with editable sample prices, and the planner has **45 meal templates**. The three displayed stores are ALDI, Walmart Supercenter, and Rico Fresh Market in or around Logan Square.
 
-### Form
-A small website — a front-end prototype built with HTML, CSS, and JavaScript, with no backend.
+### How a plan is made
 
-### Project structure
-```
-ethical-apple/
-├── index.html          (Vite entry point)
-├── package.json        (Vite project config + scripts)
-├── vite.config.js       (Vite build/dev server config)
-├── public/
-│   └── favicon.svg
-└── src/
-    ├── main.js          (screens, rendering, event wiring)
-    ├── data.js          (Kendra's own controlled dataset: ~20 grocery items, sample
-    │                      store prices/details, meal templates)
-    ├── planLogic.js      (Kendra's own decision-making logic: budget math, meal
-    │                      selection, shopping list, budget-buffer/range safeguards,
-    │                      store comparison/sorting)
-    ├── styles.css        (visual system)
-    └── reference.css     (supporting styles)
-```
+1. [`src/main.js`](src/main.js) collects the form values and calls `generatePlan()` in the browser.
+2. [`src/planLogic.js`](src/planLogic.js) considers only meal templates whose ingredients have positive catalog prices, then filters and ranks them using the selected dietary tags and ingredients the user would like to use.
+3. The planner selects one breakfast, one lunch, and one dinner per day. It aggregates ingredient needs, subtracts **entered pantry quantities**, rounds purchases to catalog units, and calculates a sample-price total. Typing a name in the free-text field does not make that ingredient free.
+4. The planner aims for **87.5% of the entered budget** to leave a buffer. It may swap meals to use more of a generous budget or to reduce an over-budget estimate. A feasible result must still pass the full-budget check at sample prices.
+5. If the planner cannot find a feasible result, the page explains that limitation rather than showing an over-budget plan as feasible. Its low-budget screening rule is a planning heuristic, not proof that a household cannot afford food.
+6. The results page calculates three **sample basket estimates** by adjusting catalog prices for each store. Users can sort by estimated cost or sample distance. When the lowest two estimates differ by less than the **12.5% caution threshold**, the app avoids naming one the cheapest.
 
-### How it works
-1. The budget form collects: budget, household size, days to cover, and a checklist of common pantry staples already on hand.
-2. `planLogic.js` calculates budget per day and per person, and flags immediately if the budget is unrealistically low for the household/days given.
-3. It selects a 3-meal plan (breakfast, lunch, dinner) per day from `data.js`'s meal templates — preferring ingredients the user already has on hand and pantry-friendly recipes.
-4. It builds an itemized shopping list (aggregating ingredient quantities across meals, subtracting what's on hand) and totals the estimated cost, built to about 85–90% of budget as a buffer.
-5. If the plan still comes in over budget, it substitutes cheaper, more pantry-friendly meals until it fits, or tells the user plainly that the budget isn't realistic for their household/days.
-6. It compares the shopping list's cost across 3 Chicago stores with labeled sample prices, shows totals as a price range rather than a single number, and lets the user sort by lowest cost or closest store — without naming a "cheapest" store when the gap between stores is smaller than the data's likely error.
+[`src/data.js`](src/data.js) holds the controlled ingredient, meal, dietary-tag, and store data. The product references for the 20 ingredients priced most recently are in [`docs/sample-price-sources.md`](docs/sample-price-sources.md).
 
-### MVP — 4 screens/states
-1. **Landing page** — opens with Maria's journey + the supporting stats; frames the problem
-2. **Budget form** — budget ($), household size, days to cover, a checklist of common pantry staples already on hand
-3. **Grocery/meal plan** — a 3-meal plan and itemized shopping list generated entirely by Kendra's own rule-based JavaScript, a running total shown as a range against budget, and substitutions when something would bust the budget
-4. **Store comparison** — "Compare where to shop": 3 Chicago stores with labeled sample prices, sortable by lowest cost or closest store, with the "cheapest" label suppressed when the price gap is within the data's likely error
+## Risks, safeguards, and limits
 
----
+**The main risk is false precision.** A single dollar amount can look like a guaranteed checkout total even though the catalog uses sample prices. If real prices are higher, someone with a tight budget may have to put food back. A store ranking based on sample adjustments could also suggest an unnecessary trip.
 
-## 3. Scope
+- The app labels prices as **estimates**, shows the estimated total against the entered budget, and aims below the full budget. The 87.5% target reduces some planning risk; it does not guarantee real-world affordability.
+- Store estimates are **not observed product-by-product prices** at ALDI, Walmart, or Rico Fresh Market. They are calculated from sample catalog prices with per-store adjustments.
+- Distances are **fixed sample values** from a Logan Square reference point. They are not based on a user's location and do not represent walking, driving, or transit routes.
+- The 12.5% comparison threshold is a **design choice**, not a measured error rate. The app does not call a store cheapest when the sample estimates are too close under that rule.
+- The app displays **one estimated dollar total**, not a price range. Taxes, fees, stock, and actual package sizes may change the amount paid.
+- Dietary tags express planning preferences. They are not verified nutrition, allergy, or medical guidance.
 
-*This scope is locked exactly to `scope-worksheet.md` (Phase 1 Gate Scope Worksheet). See that file for the original worksheet answers this section mirrors.*
+These limits are shown in the interface so users know to check current prices, stock, hours, and travel details before shopping.
 
-### What's in scope
-- Four screens: a landing page, a budget form, a meal and grocery plan, and a store comparison.
-- Inputs: budget, household size, days to cover, and a checklist of common pantry staples already on hand.
-- Output: a 3-meal plan and an itemized shopping list, built by rule-based JavaScript written from a hand-made dataset of about 20 staple items.
-- Store comparison across 3 Chicago stores using labeled sample prices, sorted two ways: lowest cost and closest.
-- Safeguards tied to the failure mode below: the plan is built to about 85–90% of the budget as a buffer, totals show as a price range, and the app won't name a "cheapest" store when the gap between stores is smaller than the data's likely error.
-- Clear labels that prices are estimates and distances are approximate.
-- **Done means:** given a budget, household size, and number of days, the app produces the plan and list, shows the total against the budget, and says plainly when the budget can't work.
-- **Stretch goal, only after all of the above works:** real straight-line distance using the free US Census Geocoder and a self-written distance calculation.
+## Verification and completion criteria
 
-### Deliberately out of scope
-- **AI-generated meal ideas** — the app works without AI, proving the core logic first. Named as a future step (Version 3 below).
-- **Live grocery prices** — no legitimate free API exists for most Chicago chains; Kroger's is the one realistic future option, so the app uses labeled sample data.
-- **Real driving, walking, or transit distance** — only straight-line distance is estimated, and it's labeled as such.
-- **More stores, user accounts, and saved plans** — they add scope without helping show the core idea.
-- **Matching users to food pantries or assistance programs** — a related but larger problem, explored earlier and set aside.
-- **Medical or special dietary needs** — reliable health guidance isn't something the app can give, so it doesn't try.
-- **"One-stop" and "balanced" store sorting** — they add logic that's harder to test and explain.
-- Any backend or server-side code (until Version 3, see Future Plans).
+The automated tests in [`tests/planLogic.test.js`](tests/planLogic.test.js) check that template ingredients are priced, a normal plan contains all three meal types each day, infeasible cases are flagged, dietary tags filter candidates, entered pantry quantities affect cost, selected sample-price plans stay within tested budgets, and store sorting and cheapest-label suppression behave as intended. Run them with `npm test`; use `npm run build` to check the production build.
 
-### Failure mode (Map)
-The estimated shopping total and store ranking come from sample prices, so if real prices run 10–15% higher, someone like Maria could end up over budget at checkout. She might also travel farther to a store the app called cheaper when it isn't. She likely wouldn't notice beforehand, because a specific dollar amount looks like fact and a small "sample pricing" label is easy to skim past. The budget buffer, price ranges, and cheapest-label suppression above are the current answer to that failure mode (Manage); the honest labeling throughout is the Measure.
+For this MVP, “done” means a user can enter their household details and receive a plan, shopping list, and sample-price total—or a clear explanation when the planner cannot find one. Passing tests does **not** establish that real Chicago checkout prices, nutrition claims, or travel distances are accurate.
 
----
+## What I tested and learned
 
-## 4. Future Plans (not part of the current build)
+I explored a local Ollama meal-planning backend and an external grocery-price API. The first model integration mostly ranked existing templates, took too long in a local test, and did not work as intended on the Vercel deployment. A fallback inside a local backend could not help a deployed frontend that could not reach that backend or the model on my computer. The price API did not provide dependable coverage for the products and stores this prototype needed. I removed both integrations from the final app rather than present their output as reliable.
 
-These are named explicitly as "Future" on gate day, and built only after the in-scope version above is fully working:
+This decision keeps the current planner's choices and arithmetic inspectable. A future AI component would need a meaningful, bounded role, validated ingredient and quantity output, independent budget checks, and a secure service reachable by the deployed app.
 
-- **Version 2 — real location/distance.** Add the US Census Geocoder (free, no API key or account required) to convert the user's ZIP/address and each store's address into coordinates, and a self-written Haversine function to calculate real straight-line distance — replacing the placeholder distance from Version 1. Distances will always be labeled "approximate straight-line distance," never "travel distance."
-- **Version 3 — hybrid LLM meal-plan enhancement.** Add an AI-generated meal-idea suggestion, in a controlled role only: Kendra's JavaScript will calculate the budget constraints and hand the LLM a pre-approved ingredient list; a small serverless function will hold the secret OpenAI API key and call the OpenAI API; the LLM will return meal ideas as structured JSON only (no prices, no store claims); Kendra's JavaScript will validate that response, reject anything outside the allowed ingredient list, and calculate all quantities/cost/budget checks itself. Guiding principle: *"AI generates suggestions. My application validates decisions."* This is the only phase that introduces any backend, and it's added last, once Versions 1 and 2 already work on their own.
-- **Live grocery pricing.** Kroger's Developer API is the one legitimate path found to real, current, store-level pricing (Mariano's is Kroger-owned) — pending hands-on confirmation of Chicago coverage (see `ethical-apple-data-investigation.md`).
-- **More stores / broader chain coverage, user accounts, saved plans, notifications** — explicitly deferred past the gate.
-- **Link to real food-access resources on an infeasible plan.** When the app tells someone their budget genuinely isn't enough (the infeasible-budget message), point them toward real food pantry/assistance resources instead of leaving them with just "try a bigger budget." Noted during testing as a future-build idea, not part of the current scope.
+## Out of scope and future direction
 
-Building and proving this version before introducing any external API or AI is itself part of the Control story for the gate: *"The app worked before I added anything external. I deliberately added real location data, and then AI, only to improve the parts that benefit from them."*
+The finished prototype does not include live grocery prices, user-specific travel distances, accounts, saved plans, notifications, food-pantry matching, medical dietary advice, or “best overall” store rankings.
 
----
+The larger food access and affordability app could add current local product prices, location-based travel information, and links to food-assistance resources. Each needs verified data coverage and a way to handle missing or outdated information. AI-generated meal ideas may be revisited only if the app can validate them against priced ingredients and budget constraints before displaying them.
 
-## 5. User Stories
+## User stories
 
-**As a Chicago resident on a tight grocery budget (like Maria),**
-- I want to enter my budget, household size, and how many days it needs to cover, so that the plan reflects my actual situation instead of a generic one.
-- I want to tell the app what food I already have at home, so I'm not shown a plan that wastes money re-buying things I don't need.
-- I want to see a clear, specific 3-meal plan instead of vague advice, so I know exactly what to cook.
-- I want an itemized shopping list with estimated costs and a running total (shown as a range) against my budget, so I can tell before I shop whether the plan actually fits, with some buffer built in.
-- I want to be told plainly if my budget realistically isn't enough for my household and days, so I'm not misled into a plan that will fail at checkout.
-- I want prices clearly labeled as estimates, not live store prices, so I don't over-trust a number the app can't guarantee.
+**As a household planning groceries, I want to:**
 
-**As a Chicago shopper deciding where to buy,**
-- I want to see a small set of nearby stores with an estimated total cost for my plan, so I can compare my options instead of guessing.
-- I want to sort those options by lowest cost or closest store, so I can prioritize what actually matters to me in the moment.
-- I want the app to avoid claiming one store is "cheapest" when the difference is too small to trust, so I'm not steered toward a store based on noise in the sample data.
-- I want distance clearly labeled as approximate, so I don't mistake it for something real until Version 2 adds actual location data.
+- Enter my total budget, number of people, and number of days so the plan fits my situation.
+- Identify food already in my kitchen, including quantities when I know them, so the shopping estimate does not count verified pantry food as a purchase.
+- See one breakfast, lunch, and dinner per day with an itemized shopping list and sample-price total.
+- Receive a clear message when the planner cannot find a feasible result instead of a misleading plan.
+- Know that the prices are estimates before I use the list at a store.
 
-**As Kendra, building and presenting this for the Phase 1 gate,**
-- I want to build the whole app in plain HTML/CSS/JS first, with data I fully control, so I can demonstrate the core mechanics are entirely mine before anything external is introduced.
-- I want a documented Prompt Log of how I used AI throughout the build, so I can demonstrate Fluency and Control on gate day.
-- I want the app's current limitations (sample pricing, placeholder distance, no live grocery APIs, no AI-generated content yet) named explicitly, so my Trustworthy-AI Map/Measure/Manage answers are honest rather than overstated.
-- I want a clear roadmap for what comes next (real location data, then a controlled AI enhancement) so I can speak to both what's built and what's deliberately deferred.
+**As a Chicago shopper comparing options, I want to:**
 
----
+- See a small set of nearby stores and sample basket estimates for the same list.
+- Sort those stores by sample cost or sample distance while seeing what those measures do—and do not—mean.
 
-## 6. Related documents
-- `scope-worksheet.md` — the Phase 1 Gate Scope Worksheet this plan is locked to
-- `README.md` — current build status and project structure
-- `ea-prompt-log.md` — verbatim prompt log for this build (Fluency/Control evidence)
-- Next Chapter Project docs: `ethical-apple-spec-sheet.md` and `ethical-apple-data-investigation.md` (fuller architecture/data-source detail behind this plan)
+**As the builder, I want to:**
+
+- Explain and test the decisions the app makes with my controlled dataset.
+- Document the experiments that did not work and the limits of the final version.
+
+## Related documents
+
+- [`scope-worksheet.md`](scope-worksheet.md) — final scope and trustworthy-AI framing.
+- [`README.md`](README.md) — concise project overview and local setup.
+- [`docs/sample-price-sources.md`](docs/sample-price-sources.md) — reference products behind the most recently added sample prices.
+- [`ea-prompt-log.md`](ea-prompt-log.md) — build and prompting history.

@@ -11,7 +11,7 @@
  * planLogic.js's generatePlan() builds meal plans from these ingredients.
  * Every meal-template ingredient is listed in GROCERY_ITEMS. Prices remain
  * editable sample estimates; see docs/sample-price-sources.md for sources
- * of the 20 ingredients added on 2026-09-30.
+ * for 20 price references checked on 2026-09-30.
  */
 
 // ---------------------------------------------------------------------------
@@ -24,17 +24,15 @@ export const GROCERY_ITEMS = [
   { id: "beans", name: "Canned Beans", unit: "can", price: 0.99, tags: ["vegetarian", "pantry"] },
   { id: "lentils", name: "Dry Lentils", unit: "bag", price: 1.79, tags: ["vegetarian", "pantry"] },
   { id: "pasta", name: "Pasta", unit: "box", price: 1.29, tags: ["vegetarian", "pantry"] },
-  { id: "tomato_sauce", name: "Tomato Sauce", unit: "jar", price: 1.49, tags: ["vegetarian", "pantry"] },
+  { id: "tomato_sauce", name: "Plain Tomato Sauce", unit: "jar", price: 1.49, tags: ["vegetarian", "pantry"] },
   { id: "eggs", name: "Eggs (dozen)", unit: "dozen", price: 2.79, tags: ["vegetarian", "highProtein"] },
   { id: "peanut_butter", name: "Peanut Butter", unit: "jar", price: 3.29, tags: ["vegetarian", "pantry"] },
-  { id: "bread", name: "Bread", unit: "loaf", price: 2.29, tags: ["vegetarian"], daysPerUnit: 5 }, // one loaf reasonably covers up to 5 days regardless of household size or how many meals use it
+  { id: "bread", name: "Bread", unit: "loaf", price: 2.29, tags: ["vegetarian"] },
   { id: "oats", name: "Oats", unit: "bag", price: 2.49, tags: ["vegetarian", "pantry"] },
-  { id: "bananas", name: "Bananas", unit: "lb", price: 0.59, tags: ["vegetarian"] },
   { id: "frozen_veg", name: "Frozen Mixed Vegetables", unit: "bag", price: 1.99, tags: ["vegetarian"] },
   { id: "chicken", name: "Chicken Thighs", unit: "lb", price: 3.15, tags: ["highProtein"] }, // nudged toward a live Walmart price check (~$3.16/lb) done 2026-09-29
   { id: "ground_beef", name: "Ground Beef", unit: "lb", price: 4.49, tags: ["highProtein"] },
-  { id: "tortillas", name: "Tortillas", unit: "pack", price: 2.49, tags: ["vegetarian"], daysPerUnit: 5 }, // one pack reasonably covers up to 5 days regardless of household size or how many meals use it
-  { id: "cheese", name: "Shredded Cheese", unit: "bag", price: 3.49, tags: ["vegetarian"] },
+  { id: "tortillas", name: "Tortillas", unit: "pack", price: 2.49, tags: ["vegetarian"], unitsPerPackage: 10 }, // planning assumption: 10 tortillas per pack
   { id: "onion", name: "Onion", unit: "each", price: 0.49, tags: ["vegetarian", "pantry"] },
   { id: "garlic", name: "Garlic", unit: "head", price: 0.59, tags: ["vegetarian", "pantry"] },
   { id: "cooking_oil", name: "Cooking Oil", unit: "bottle", price: 3.99, tags: ["vegetarian", "pantry"] },
@@ -108,7 +106,7 @@ export const STORES = [
     name: "ALDI",
     address: "1753 N Milwaukee Ave, Chicago, IL 60647",
     area: "Wicker Park / Bucktown",
-    detail: "A discount grocer with more store-brand substitutions, usually the cheapest basket.",
+    detail: "A discount grocer included in this sample comparison.",
     priceMultiplier: 0.85,
     coverage: 0.85,
     sampleDistanceMiles: 1.0,
@@ -118,7 +116,7 @@ export const STORES = [
     name: "Walmart Supercenter",
     address: "4626 W Diversey Ave, Chicago, IL 60639",
     area: "Hermosa",
-    detail: "A full-size supercenter with the broadest one-trip coverage, at close-to-average prices.",
+    detail: "A full-size supercenter included in this sample comparison.",
     priceMultiplier: 0.97,
     coverage: 1,
     sampleDistanceMiles: 2.6,
@@ -128,7 +126,7 @@ export const STORES = [
     name: "Rico Fresh Market",
     address: "3552 W Armitage Ave, Chicago, IL 60647",
     area: "Logan Square",
-    detail: "A local grocer with strong fresh produce, less packaged-goods variety, and the shortest trip for this area.",
+    detail: "A local grocer included in this sample comparison.",
     priceMultiplier: 0.9,
     coverage: 0.75,
     sampleDistanceMiles: 0.4,
@@ -163,7 +161,7 @@ export const MEAL_TEMPLATES = [
     pantryFriendly: true,
     ingredients: [
       { itemId: "oats", qtyPerPerson: 0.15 },
-      { itemId: "bananas", qtyPerPerson: 1 },
+      { itemId: "banana", qtyPerPerson: 1 },
     ],
   },
   {
@@ -191,7 +189,7 @@ export const MEAL_TEMPLATES = [
     pantryFriendly: false,
     ingredients: [
       { itemId: "eggs", qtyPerPerson: 0.25 },
-      { itemId: "cheese", qtyPerPerson: 0.1 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.1 },
       { itemId: "cooking_oil", qtyPerPerson: 0.03 },
     ],
   },
@@ -222,7 +220,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.25 },
       { itemId: "peanut_butter", qtyPerPerson: 0.12 },
-      { itemId: "bananas", qtyPerPerson: 0.5 },
+      { itemId: "banana", qtyPerPerson: 0.5 },
     ],
   },
   {
@@ -238,7 +236,7 @@ export const MEAL_TEMPLATES = [
       { itemId: "eggs", qtyPerPerson: 0.2 },
       { itemId: "beans", qtyPerPerson: 0.3 },
       { itemId: "tortillas", qtyPerPerson: 1 },
-      { itemId: "cheese", qtyPerPerson: 0.08 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.08 },
     ],
   },
  
@@ -254,7 +252,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "oats", qtyPerPerson: 0.15 },
       { itemId: "peanut_butter", qtyPerPerson: 0.1 },
-      { itemId: "bananas", qtyPerPerson: 0.5 },
+      { itemId: "banana", qtyPerPerson: 0.5 },
     ],
   },
  
@@ -301,7 +299,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "tortillas", qtyPerPerson: 2 },
       { itemId: "beans", qtyPerPerson: 0.4 },
-      { itemId: "cheese", qtyPerPerson: 0.15 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.15 },
     ],
   },
   {
@@ -315,7 +313,7 @@ export const MEAL_TEMPLATES = [
     pantryFriendly: true,
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.3 },
-      { itemId: "cheese", qtyPerPerson: 0.15 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.15 },
       { itemId: "cooking_oil", qtyPerPerson: 0.03 },
     ],
   },
@@ -346,7 +344,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "tortillas", qtyPerPerson: 1 },
       { itemId: "frozen_veg", qtyPerPerson: 0.3 },
-      { itemId: "cheese", qtyPerPerson: 0.12 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.12 },
     ],
   },
   {
@@ -376,7 +374,7 @@ export const MEAL_TEMPLATES = [
     pantryFriendly: true,
     ingredients: [
       { itemId: "bread", qtyPerPerson: 0.25 },
-      { itemId: "cheese", qtyPerPerson: 0.12 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.12 },
       { itemId: "cooking_oil", qtyPerPerson: 0.02 },
     ],
   },
@@ -423,7 +421,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "tortillas", qtyPerPerson: 1 },
       { itemId: "chicken", qtyPerPerson: 0.25 },
-      { itemId: "cheese", qtyPerPerson: 0.1 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.1 },
     ],
   },
   {
@@ -487,7 +485,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "ground_beef", qtyPerPerson: 0.35 },
       { itemId: "tortillas", qtyPerPerson: 3 },
-      { itemId: "cheese", qtyPerPerson: 0.15 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.15 },
       { itemId: "onion", qtyPerPerson: 0.15 },
     ],
   },
@@ -503,7 +501,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "beans", qtyPerPerson: 0.6 },
       { itemId: "tortillas", qtyPerPerson: 3 },
-      { itemId: "cheese", qtyPerPerson: 0.15 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.15 },
     ],
   },
   {
@@ -567,7 +565,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "rice", qtyPerPerson: 0.35 },
       { itemId: "beans", qtyPerPerson: 0.5 },
-      { itemId: "cheese", qtyPerPerson: 0.1 },
+      { itemId: "shredded_cheese", qtyPerPerson: 0.1 },
       { itemId: "onion", qtyPerPerson: 0.15 },
     ],
   },
@@ -654,7 +652,7 @@ export const MEAL_TEMPLATES = [
     { itemId: "burger_buns", qtyPerPerson: 0.2 },
     { itemId: "potatoes", qtyPerPerson: 0.35 },
     { itemId: "lettuce", qtyPerPerson: 0.08 },
-    { itemId: "cheese", qtyPerPerson: 0.08 },
+    { itemId: "shredded_cheese", qtyPerPerson: 0.08 },
     { itemId: "cooking_oil", qtyPerPerson: 0.03 },
   ],
 },
@@ -742,7 +740,7 @@ export const MEAL_TEMPLATES = [
   ingredients: [
     { itemId: "tuna", qtyPerPerson: 0.2 },
     { itemId: "bread", qtyPerPerson: 0.25 },
-    { itemId: "cheese", qtyPerPerson: 0.08 },
+    { itemId: "shredded_cheese", qtyPerPerson: 0.08 },
     { itemId: "mayonnaise", qtyPerPerson: 0.04 },
   ],
 },
@@ -828,7 +826,7 @@ export const MEAL_TEMPLATES = [
     ingredients: [
       { itemId: "greek_yogurt", qtyPerPerson: 0.3 },
       { itemId: "peanut_butter", qtyPerPerson: 0.08 },
-      { itemId: "bananas", qtyPerPerson: 0.5 },
+      { itemId: "banana", qtyPerPerson: 0.5 },
     ],
   },
   {

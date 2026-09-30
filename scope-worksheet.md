@@ -1,43 +1,47 @@
-# Scope Worksheet: Ethical Apple
+# Scope Worksheet: Ethical Apple — Final Prototype
 
 **Program:** Next Chapter Project — Phase 1 Gate
 **Author:** Kendra Hartnett
 
----
+## The problem and who has it
 
-## The real problem + who has it
+People shopping on tight grocery budgets need to turn a limited amount of money into enough meals for everyone in their household until they can shop again. They have to consider the budget, household size, number of days, food already at home, and grocery prices at the same time. Maria—a Chicago parent with two kids and $35 to last until Friday—is the person I kept in mind. Her question is: “What meals can I make, what do I need to buy, and will it fit?”
 
-People in Chicago shopping on very limited grocery budgets often can't tell how to turn the money they have into enough meals to last until they can shop again. They have to balance budget, household size, days to cover, food already at home, and prices, and that leads to overspending, wasted food, or a cart that doesn't stretch far enough. Maria, a parent with $35, two kids, and until Friday, is the example.
+## My solution in one sentence
 
-## My solution (one sentence)
+Ethical Apple starts with a household’s budget and builds a three-meals-per-day plan, an itemized shopping list, and sample basket comparisons for three nearby Chicago stores.
 
-Ethical Apple turns a Chicago user's grocery budget into a simple meal and shopping plan, then compares estimated prices at a few nearby stores.
+## Form
 
-## Form (site / assistant / tool)
+A front-end website built with HTML, CSS, and JavaScript. The final app runs in the browser, with no backend or AI model at runtime.
 
-A small website, a front-end prototype built with HTML, CSS, and JavaScript, with no backend.
+## What is in scope
 
-## What's in scope (be tight)
+- **Three screens:** a landing page, a form, and a results page containing the meal plan, shopping list, and store comparison.
+- **Inputs:** total budget, household size, days to cover, ingredients the user would like to use, optional pantry quantities, and dietary preferences.
+- **Meal planning:** My rule-based JavaScript selects one breakfast, one lunch, and one dinner per day from 45 meal templates. A catalog of 41 ingredients supplies editable sample prices. Only entered pantry *quantities* reduce the estimated cost; typing an ingredient’s name guides selection but does not make it free.
+- **Shopping output:** An itemized list and estimated total shown against the entered budget. Users can download, copy, or share the grocery list and totals.
+- **Store comparison:** Sample basket estimates for ALDI, Walmart Supercenter, and Rico Fresh Market, sortable by estimated cost or sample distance. The store estimates are adjustments to sample prices, not observed prices for every product at each store.
+- **Budget safeguards:** The planner aims for 87.5% of the budget to leave a buffer. It does not display an over-budget sample-price plan as feasible, and it gives a clear message when it cannot find a workable plan. If the two lowest store estimates are within a 12.5% caution threshold, it avoids calling either one the cheapest.
+- **Clear limits:** The page labels prices as estimates and distances as fixed example values. It tells users to confirm prices, stock, and hours before shopping.
 
-- 3 screens: a landing page, a budget form, a meal and grocery plan with a store comparison and distance below.
-- Inputs: budget, household size, days to cover, dietary preferences, and a checklist of common pantry staples already on hand.
-- Output: a 3-meal plan and an itemized shopping list, built by rule-based JavaScript I wrote from my own hand-made dataset of about 20 staple items.
-- Store comparison across 3 Chicago stores using labeled sample prices, sorted two ways: lowest cost and closest.
-- Safeguards tied to my failure mode: the plan is built to about 85–90% of the budget as a buffer, totals show as a price range, and the app won't name a "cheapest" store when the gap between stores is smaller than the data's likely error.
-- Clear labels that prices are estimates and distances are approximate.
-- **Done means:** given a budget, household size, and number of days, the app produces the plan and list, shows the total against the budget, and says plainly when the budget can't work.
-- **Stretch goal, only after all of the above works:** real straight-line distance using the free US Census Geocoder and my own distance calculation.
+**Done means:** A user can enter their household details and receive three meals per day, a shopping list, and a sample-price total—or a clear message that the app could not find a plan within the entered budget. Tests check the budget calculation across selected cases; they do not guarantee a real checkout total.
 
-## What I'm deliberately leaving out
+## What I left out
 
-- **AI-generated meal ideas:** The app works without AI, so I'm proving the core logic first. I'll name this as a future step.
-- **Live grocery prices:** There's no legitimate free API for most Chicago chains. Kroger's is the one realistic future option, so I use labeled sample data.
-- **Real driving, walking, or transit distance:** The app only estimates straight-line distance, and it says so.
-- **More stores, user accounts, and saved plans:** They add scope without helping show the core idea.
-- **Matching users to food pantries or assistance programs:** It's a related but larger problem.
-- **Medical or special dietary needs:** I can't give reliable health guidance, so the app doesn't try.
-- **"One-stop" and "balanced" store sorting:** They add logic that's harder to test and explain.
+- **AI-generated meals and prices:** I tested a local Ollama integration. It was slow, initially had little influence on the meals, and did not work as intended on the Vercel deployment because the deployed site could not reach the model and backend on my computer. I kept the final version rule-based so I could inspect and test its decisions. AI remains a possible future feature if its output can be validated before users see it.
+- **Live grocery prices:** I tested an external grocery-price API, but it did not give dependable coverage for the products and stores this prototype needed. The current prices are labeled samples. I recorded sources for the 20 ingredients I priced most recently.
+- **Real travel distance:** The current distances are fixed samples, not distances from a user’s location or estimates of walking, driving, or transit time.
+- **Accounts, saved plans, more stores, and assistance-program matching:** These belong to the larger food access app I hope to build, beyond this prototype’s scope.
+- **Medical or allergy guidance:** Dietary tags are planning preferences, not verified health advice.
+- **Additional store rankings:** The app supports sorting by estimated cost or sample distance, without “best overall” or “one-stop” claims.
 
-## My first guess at the failure mode (Map)
+## Trustworthy-AI lens
 
-The estimated shopping total and store ranking come from sample prices, so if real prices run 10–15% higher, someone like Maria could end up over budget at checkout. She might also travel farther to a store the app called cheaper when it isn't. She likely wouldn't notice beforehand, because a specific dollar amount looks like fact and a small "sample pricing" label is easy to skim past.
+**Map the risk:** Sample prices can look more certain than they are. If checkout prices are higher, someone like Maria could go over budget. A store ranking based on sample adjustments could also lead her to make an unnecessary trip.
+
+**Measure it:** I tested normal and difficult budgets, household sizes, pantry quantities, dietary preferences, and store-ranking behavior. One test checks that feasible plans stay within the entered budget **at the catalog’s sample prices**. This does not measure price accuracy at a Chicago store.
+
+**Manage it:** The app aims below the full budget, labels its estimates and sample distances, avoids declaring a cheapest store when estimates are close, and gives a clear result when it cannot find a feasible plan. The 12.5% comparison threshold is a cautious design choice, not a measured error rate.
+
+**What I learned:** Staying in control of the build meant understanding what the model was—and was not—doing, testing the fallback, and recognizing that a local model does not automatically become available to a deployed website. This prototype is a small, testable part of a larger food access and affordability app.
