@@ -393,7 +393,6 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   .step-card--featured { transform: none; }
   .step-card--featured:hover { transform: translateY(-7px); }
   .setup-layout, .overview-grid, .list-layout { grid-template-columns: 1fr; }
-  .setup-aside { order: -1; }
   .setup-aside h2 { margin-top: 35px; }
   .overview-grid .note-panel { order: -1; }
 }

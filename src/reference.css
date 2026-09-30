@@ -527,6 +527,10 @@
   .ea-ref .setup-aside,
   .ea-ref .meal-panel,
   .ea-ref .shopping-panel { padding: 19px; }
+  .ea-ref .field label,
+  .ea-ref .field-legend { font-size: 12px; letter-spacing: .04em; }
+  .ea-ref .field small { font-size: 13px; line-height: 1.5; }
+  .ea-ref .aside-kicker { font-size: 12px; }
   .ea-ref .flow-actions .back-button { width: 100%; }
   .ea-ref .day-meal { grid-template-columns: 52px minmax(0, 1fr); gap: 10px; }
   .ea-ref .shopping-table { font-size: 10px; }
