@@ -5,11 +5,15 @@ import { GROCERY_ITEMS, MEAL_TEMPLATES, MEAL_TYPES, STORES } from '../src/data.j
 
 const baseForm = { budget: 95, householdSize: 2, days: 5, onHandIds: new Set(), pantry: {}, dietaryPreferences: [] };
 
-test('only meals with fully-priced ingredients are ever selectable', () => {
-  assert.ok(AVAILABLE_MEAL_TEMPLATES.length < MEAL_TEMPLATES.length, 'expected some templates to reference unpriced ingredients');
-  const knownIds = new Set(GROCERY_ITEMS.map(i => i.id));
-  for (const meal of AVAILABLE_MEAL_TEMPLATES) {
-    for (const ing of meal.ingredients) assert.ok(knownIds.has(ing.itemId), `${meal.id} references unknown ingredient ${ing.itemId}`);
+test('all template ingredients have positive catalog prices', () => {
+  const items = new Map(GROCERY_ITEMS.map(item => [item.id, item]));
+  assert.equal(items.size, GROCERY_ITEMS.length, 'catalog IDs should be unique');
+  for (const meal of MEAL_TEMPLATES) for (const ing of meal.ingredients) {
+    assert.ok(items.has(ing.itemId), `${meal.id} references unknown ingredient ${ing.itemId}`);
+  }
+  assert.equal(AVAILABLE_MEAL_TEMPLATES.length, MEAL_TEMPLATES.length);
+  for (const meal of AVAILABLE_MEAL_TEMPLATES) for (const ing of meal.ingredients) {
+    assert.ok(Number.isFinite(items.get(ing.itemId).price) && items.get(ing.itemId).price > 0, `${meal.id} includes unpriced ${ing.itemId}`);
   }
 });
 

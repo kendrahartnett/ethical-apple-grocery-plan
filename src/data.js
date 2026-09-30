@@ -9,10 +9,9 @@
  * (src/main.js) — it is not part of what Replit produced.
  *
  * planLogic.js's generatePlan() builds meal plans from these ingredients.
- * Only meal templates whose every ingredient exists in GROCERY_ITEMS are
- * ever selectable (see AVAILABLE_MEAL_TEMPLATES in planLogic.js) -- a few
- * templates below still reference ingredients not yet added here, left
- * from earlier backend/Ollama work.
+ * Every meal-template ingredient is listed in GROCERY_ITEMS. Prices remain
+ * editable sample estimates; see docs/sample-price-sources.md for sources
+ * of the 20 ingredients added on 2026-09-30.
  */
 
 // ---------------------------------------------------------------------------
@@ -44,6 +43,27 @@ export const GROCERY_ITEMS = [
   { id: "carrots", name: "Carrots", unit: "lb", price: 0.79, tags: ["vegetarian"] },
   { id: "greek_yogurt", name: "Plain Greek Yogurt", unit: "tub", price: 3.28, tags: ["vegetarian"] }, // added 2026-09-29 to give high-protein plans more real headroom
   { id: "tuna", name: "Canned Tuna (4-pack)", unit: "pack", price: 3.84, tags: [] }, // added 2026-09-29, same reason -- fish, so not tagged vegetarian
+  // Product-by-product sources and package sizes: docs/sample-price-sources.md.
+  { id: "ground_turkey", name: "Ground Turkey", unit: "lb", price: 1.98, tags: [] },
+  { id: "black_beans", name: "Black Beans", unit: "can", price: 0.92, tags: ["vegetarian", "pantry"] },
+  { id: "shredded_cheese", name: "Shredded Cheese", unit: "bag", price: 2.22, tags: ["vegetarian"] },
+  { id: "lettuce", name: "Lettuce", unit: "head", price: 1.97, tags: ["vegetarian"] },
+  { id: "salsa", name: "Salsa", unit: "jar", price: 1.97, tags: ["vegetarian", "pantry"] },
+  { id: "frozen_pizza", name: "Frozen Pizza", unit: "pizza", price: 4.46, tags: [] },
+  { id: "salad_mix", name: "Salad Mix", unit: "bag", price: 1.97, tags: ["vegetarian"] },
+  { id: "salad_dressing", name: "Salad Dressing", unit: "bottle", price: 2.37, tags: ["vegetarian"] },
+  { id: "chicken_breast", name: "Chicken Breast", unit: "lb", price: 2.57, tags: [] },
+  { id: "romaine_lettuce", name: "Romaine Lettuce", unit: "head", price: 2.06, tags: ["vegetarian"] },
+  { id: "caesar_dressing", name: "Caesar Dressing", unit: "bottle", price: 2.37, tags: [] },
+  { id: "parmesan_cheese", name: "Parmesan Cheese", unit: "container", price: 3.00, tags: ["vegetarian"] },
+  { id: "croutons", name: "Croutons", unit: "bag", price: 1.42, tags: ["vegetarian"] },
+  { id: "burger_buns", name: "Burger Buns", unit: "pack", price: 1.48, tags: ["vegetarian"] },
+  { id: "granola", name: "Granola", unit: "bag", price: 2.78, tags: ["vegetarian"] },
+  { id: "banana", name: "Banana", unit: "lb", price: 0.50, tags: ["vegetarian"] },
+  { id: "pasta_sauce", name: "Pasta Sauce", unit: "jar", price: 1.97, tags: ["vegetarian", "pantry"] },
+  { id: "broccoli", name: "Broccoli", unit: "lb", price: 2.12, tags: ["vegetarian"] },
+  { id: "mayonnaise", name: "Mayonnaise", unit: "jar", price: 3.57, tags: ["vegetarian"] },
+  { id: "corn", name: "Corn", unit: "can", price: 0.82, tags: ["vegetarian", "pantry"] },
 ];
 
 // ---------------------------------------------------------------------------

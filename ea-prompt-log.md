@@ -277,4 +277,78 @@ Preparing a code-walkthrough reference for the demo, explicitly highlighting the
 
 ---
 
+### Phase 17 — Demo Script (#82)
+Kendra's finalized Thursday demo script, closing out the priority list from Phase 14 (#78).
+
+**#82** (2026-09-29, 17:08 CT) — Supplied the finalized demo script (0:00–2:55): the problem/Maria framing, a live-demo walkthrough, the AI-removal decision narrative (matching the Phase 13 Responsible AI Scope Decision), and a Map/Measure/Manage trustworthy-AI section tied to the app's real safeguards (budget buffer, price ranges, cheapest-suppression, approximate-distance labeling), plus two prepared follow-up answers (deterministic, prompt injection). Saved verbatim to the Claude Project as `gate1-week3-demo-script.md`. This completes the 5-item priority list from #78 (scope mismatch → outside-tool prompts → re-test → code walkthrough → demo script).
+
+---
+
+### Phase 18 — Personal Reflection (#83)
+Adding a personal-growth note to the demo script, capturing what Kendra took away from the build beyond the code itself.
+
+**#83** (2026-09-29, 17:17 CT) — Asked to add that she learned a lot during this build, specifically about what goes into a real build: planning and scope, research, and testing. Added a closing reflection beat to `gate1-week3-demo-script.md`, right after the existing "responsible AI" close line, in her voice — on how much of a real build lives outside the code itself: locking scope so a project stays believable for one person to build, the research it takes to know whether a decision is viable before committing to it, and testing as proof of understanding what was built, not just that it was built.
+
+---
+
+**#84** (2026-09-29, 17:28 CT) — Rejected the #83 phrasing as overwritten and not in her voice. Replaced the closing line in `gate1-week3-demo-script.md` with a plain sentence: "This whole build was a huge growing journey for me, and I learned so much along the way."
+
+---
+
+### Phase 19 — Build Retrospective (#85)
+Asked for an honest, reflective review of the whole build process and how she demonstrated control as an AI-augmented builder.
+
+**#85** (2026-09-29, ~17:35 CT) — Asked me to review her prompts across this project and report back on how she handled the build, how she demonstrated control, her strengths, and where she can improve as an AI-augmented builder. Answered conversationally rather than as a new doc. Strengths noted: recognizing "it works" isn't good enough (catching the empty-panel bug, the under-filled-budget issue, the store-screen design mismatch); willingness to reverse course on real, already-working AI work once testing showed it wasn't earning its complexity, rather than treating sunk effort as a reason to keep it; consistently asking for tradeoffs and reasoning instead of just output; and catching scope drift (the missing store-comparison feature in #78, stale README language). Areas to improve: documentation/logging discipline sometimes lagged the actual build work by hours; testing for downstream effects tended to happen after drift occurred rather than being a standing check; and the Ollama/Vercel architecture mismatch could have been caught earlier with an upfront deployment-target check before investing in the integration.
+
+---
+
+### Phase 20 — Instructor Feedback & Demo Reframe (#86)
+Reframing the demo script per live instructor feedback, and preparing for a technical Q&A on the Ollama/Vercel attempt.
+
+**#86** (2026-09-29, ~17:50 CT) — Pasted instructor feedback suggesting the demo lead with an honest "I went in to make X. A, B, C didn't work because... and what's left is basic, but I tested some things, and learned a lot" arc, plus his plan to ask live about how she tried to tie local models into her Vercel setup. Shared her own reflection that pulling the Ollama/pricing-API work left the app feeling "basic." Reassured that the technical decision was already right — only the framing needed to change. Restructured Section 3 of `gate1-week3-demo-script.md` around the instructor's suggested arc, splitting the two failed attempts (the open-source grocery pricing API, and the local Ollama/Vercel integration) into distinct, clearly-explained beats. Created a new Claude Project doc, `gate1-week3-instructor-qa-prep.md`, covering the actual architecture built, a two-part root-cause diagnosis (a fundamental deployment/architecture mismatch between a locally-run model and a cloud-deployed Vercel frontend, plus a separate genuine performance problem even tested locally), proposed better directions (a hosted inference API for production, Ollama for local dev only, a background-job/polling pattern given Vercel's serverless execution limits, and keeping her existing validation layer regardless of model choice), and an honest "what I don't know" section for if the instructor pushes further.
+
+---
+
+### Phase 21 — Demo Script Refinement, Round 2 (#87)
+Tightening the demo script with more precise technical language for the three things she actually tested.
+
+**#87** (2026-09-30, ~11:53 CT) — Pasted refined, more technically precise demo guidance narrowing the earlier arc into three explicitly-tested items: live grocery prices, Ollama meal ranking, and deployment. Added specific technical details: the model was only ranking pre-built template meals rather than generating new ones; a local request took ~120 seconds; an empty `catch {}` block hid the underlying error; and `localhost` means a different machine once deployed to Vercel. Restructured `gate1-week3-demo-script.md` into "what I went in to build" / "what didn't work, and why" (three tested items) / live demo / Trustworthy-AI lens / close, plus a "phrase to avoid" note and two new prepared Q&A answers (fallback behavior, next steps). Updated `gate1-week3-instructor-qa-prep.md` with a "The fallback bug, specifically" section and two new better-direction items (give the model a meaningful job; fix the error handling).
+
+---
+
+### Phase 22 — Passion Statement (#88)
+Adding the emotional core of why she built this app to the problem-framing section of the demo script.
+
+**#88** (2026-09-30, ~11:55 CT) — Asked to add a passion statement to the problem section: "The point is who this is for... a missed meal... People on a tight budget need a plan they can trust, not one they have to double check." Added verbatim to the end of Section 1 of `gate1-week3-demo-script.md`, right after the Maria/list-apps setup.
+
+---
+
+### Phase 23 — Research-Backed Honesty Pass (#89)
+Enriching the pricing-API and Ollama narrative with real research and additional honest technical specifics.
+
+**#89** (2026-09-30, ~12:12 CT) — Shared her original plan (real grocery prices via API + LLM meal generation with her own code verifying prices) and detailed, research-backed findings on why public grocery pricing APIs are rare (hyper-local/dynamic pricing, anti-scraping protection, no standardized UPCs, chain monetization/control), the specific ALDI-Germany test result, the 120-second Ollama response time, and an honest note that her sample prices were built with OpenAI's help against real Walmart prices rather than a live feed. Also flagged the empty `catch {}` fallback bug, feeling "beyond my knowledge," and a firm decision on how far to take the AI investigation given project scope and time. Updated `gate1-week3-demo-script.md`'s Sections 2–3 with this detail and a new "Why not just use a public grocery pricing API?" Q&A, and added "Why I didn't just use a live grocery pricing API" (with sourced citations) and "Knowing when to stop" sections to `gate1-week3-instructor-qa-prep.md`.
+
+---
+
+### Phase 24 — 3-Minute Gate Script (#90)
+A strict, timed script for the formal Gate presentation itself, distinct from the longer conversational demo script.
+
+**#90** (2026-09-30, ~13:11 CT) — Provided the required 3-minute Gate presentation structure: problem + who it's for (20s), show the solution working (60s), control moment (40s), Trustworthy-AI in one breath (40s), what's next (20s), then Q&A. Created a new Claude Project doc, `gate1-week3-3-minute-gate-script.md`, tightly timed to this format: opens with the Maria/passion framing, a happy-path live demo, a control moment explaining the budget-buffer line in her own words plus the real AI mistake she caught (an outside AI coding tool generating meal templates that referenced 20 non-existent ingredients, caught via code review), a condensed Map/Measure/Manage paragraph, and a "what's next" close (a real pricing partner, a hosted inference API instead of local Ollama). Kept `gate1-week3-demo-script.md` as the separate, longer version for the informal instructor conversation.
+
+---
+
+### Phase 25 — Demo Closing Review & Final Close (#91–96)
+
+Kendra drafted a fuller, more reflective closing statement for the demo — "responsible AI also means staying in control of the build," tying Ollama testing, budget-math verification, and the decision to pull an unreliable integration back to the larger food-access vision she's narrowing this prototype from, closing on: "a trustworthy tool isn't just one that produces an answer — it's one whose limits I understand and can explain to the person using it." (#91)
+
+Asked for and received a condensed ~20-second version for the 3-minute Gate script's close slot. (#92)
+
+Asked for the "trustworthy tool" line to be broken down in plain language — explained as contrasting a tool that merely produces an answer against one whose builder understands and discloses its limits, tied back to the Maria example. (#93)
+
+Asked what "responsible AI" means generally — explained as covering reliability/safety, transparency, fairness, accountability, and privacy/security, each connected to a concrete decision in this build (verifying Ollama's math herself, catching the missing-ingredient meal templates, disclosing sample vs. live pricing, and time-boxing the AI investigation). (#94)
+
+Reaffirmed the closing personal line: "This whole build was a huge growing journey for me, and I learned so much along the way." (#95)
+
+Approved folding both into the final scripts. (#96) `gate1-week3-demo-script.md`'s Close section now reads the full reflective closing (control/limits thesis + growing-journey line). `gate1-week3-3-minute-gate-script.md` gained an optional "Close (if time allows, before Q&A)" section with the condensed two-sentence version, noting the five timed sections already fill the 3 minutes on their own.
+
 *This file is the canonical, organized prompt log for this repo. New prompts are logged verbatim first (in the Claude Project's `gate1-week3-full-prompts.md`), then reflected here under the appropriate phase and, where relevant, the highlight sections above.*

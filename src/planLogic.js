@@ -20,20 +20,15 @@ const MIN_PER_PERSON_PER_DAY = 4.5;
 // sample data. 0.875 is the midpoint of that range.
 const BUDGET_BUFFER_FRACTION = 0.875;
 
-const KNOWN_ITEM_IDS = new Set(GROCERY_ITEMS.map((i) => i.id));
+const PRICED_ITEM_IDS = new Set(GROCERY_ITEMS.filter((i) => Number.isFinite(i.price) && i.price > 0).map((i) => i.id));
 
 /**
- * Only meals whose every ingredient exists in GROCERY_ITEMS are safe to
- * select and price -- an unknown ingredient id would otherwise be silently
- * skipped by buildShoppingList(), understating both the shopping list and
- * the total cost. A handful of meal templates were added during earlier
- * backend/Ollama work (e.g. items like "ground_turkey", "chicken_breast",
- * "salsa") that reference ingredients never added to GROCERY_ITEMS; this
- * filter keeps them out of rotation until matching grocery items exist,
- * instead of quietly pricing them wrong.
+ * A meal is selectable only when every ingredient has a positive catalog
+ * price. Newly cataloged ingredients with price: null cannot be mistaken
+ * for free food while their researched prices are still pending.
  */
 export const AVAILABLE_MEAL_TEMPLATES = MEAL_TEMPLATES.filter((m) =>
-  m.ingredients.every((ing) => KNOWN_ITEM_IDS.has(ing.itemId))
+  m.ingredients.every((ing) => PRICED_ITEM_IDS.has(ing.itemId))
 );
 
 /**
