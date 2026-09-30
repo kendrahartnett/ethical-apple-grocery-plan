@@ -25,14 +25,14 @@ export const GROCERY_ITEMS = [
   { id: "lentils", name: "Dry Lentils", unit: "bag", price: 1.79, tags: ["vegetarian", "pantry"] },
   { id: "pasta", name: "Pasta", unit: "box", price: 1.29, tags: ["vegetarian", "pantry"] },
   { id: "tomato_sauce", name: "Tomato Sauce", unit: "jar", price: 1.49, tags: ["vegetarian", "pantry"] },
-  { id: "eggs", name: "Eggs (dozen)", unit: "dozen", price: 2.79, tags: ["vegetarian"] },
+  { id: "eggs", name: "Eggs (dozen)", unit: "dozen", price: 2.79, tags: ["vegetarian", "highProtein"] },
   { id: "peanut_butter", name: "Peanut Butter", unit: "jar", price: 3.29, tags: ["vegetarian", "pantry"] },
   { id: "bread", name: "Bread", unit: "loaf", price: 2.29, tags: ["vegetarian"], daysPerUnit: 5 }, // one loaf reasonably covers up to 5 days regardless of household size or how many meals use it
   { id: "oats", name: "Oats", unit: "bag", price: 2.49, tags: ["vegetarian", "pantry"] },
   { id: "bananas", name: "Bananas", unit: "lb", price: 0.59, tags: ["vegetarian"] },
   { id: "frozen_veg", name: "Frozen Mixed Vegetables", unit: "bag", price: 1.99, tags: ["vegetarian"] },
-  { id: "chicken", name: "Chicken Thighs", unit: "lb", price: 3.15, tags: [] }, // nudged toward a live Walmart price check (~$3.16/lb) done 2026-09-29
-  { id: "ground_beef", name: "Ground Beef", unit: "lb", price: 4.49, tags: [] },
+  { id: "chicken", name: "Chicken Thighs", unit: "lb", price: 3.15, tags: ["highProtein"] }, // nudged toward a live Walmart price check (~$3.16/lb) done 2026-09-29
+  { id: "ground_beef", name: "Ground Beef", unit: "lb", price: 4.49, tags: ["highProtein"] },
   { id: "tortillas", name: "Tortillas", unit: "pack", price: 2.49, tags: ["vegetarian"], daysPerUnit: 5 }, // one pack reasonably covers up to 5 days regardless of household size or how many meals use it
   { id: "cheese", name: "Shredded Cheese", unit: "bag", price: 3.49, tags: ["vegetarian"] },
   { id: "onion", name: "Onion", unit: "each", price: 0.49, tags: ["vegetarian", "pantry"] },
@@ -41,18 +41,18 @@ export const GROCERY_ITEMS = [
   { id: "salt", name: "Salt", unit: "container", price: 0.99, tags: ["vegetarian", "pantry"] },
   { id: "potatoes", name: "Potatoes", unit: "lb", price: 0.69, tags: ["vegetarian"] },
   { id: "carrots", name: "Carrots", unit: "lb", price: 0.79, tags: ["vegetarian"] },
-  { id: "greek_yogurt", name: "Plain Greek Yogurt", unit: "tub", price: 3.28, tags: ["vegetarian"] }, // added 2026-09-29 to give high-protein plans more real headroom
-  { id: "tuna", name: "Canned Tuna (4-pack)", unit: "pack", price: 3.84, tags: [] }, // added 2026-09-29, same reason -- fish, so not tagged vegetarian
+  { id: "greek_yogurt", name: "Plain Greek Yogurt", unit: "tub", price: 3.28, tags: ["vegetarian", "highProtein"] }, // added 2026-09-29 to give high-protein plans more real headroom
+  { id: "tuna", name: "Canned Tuna (4-pack)", unit: "pack", price: 3.84, tags: ["highProtein"] }, // added 2026-09-29, same reason -- fish, so not tagged vegetarian
   // Product-by-product sources and package sizes: docs/sample-price-sources.md.
-  { id: "ground_turkey", name: "Ground Turkey", unit: "lb", price: 1.98, tags: [] },
+  { id: "ground_turkey", name: "Ground Turkey", unit: "lb", price: 1.98, tags: ["highProtein"] },
   { id: "black_beans", name: "Black Beans", unit: "can", price: 0.92, tags: ["vegetarian", "pantry"] },
   { id: "shredded_cheese", name: "Shredded Cheese", unit: "bag", price: 2.22, tags: ["vegetarian"] },
   { id: "lettuce", name: "Lettuce", unit: "head", price: 1.97, tags: ["vegetarian"] },
   { id: "salsa", name: "Salsa", unit: "jar", price: 1.97, tags: ["vegetarian", "pantry"] },
-  { id: "frozen_pizza", name: "Frozen Pizza", unit: "pizza", price: 4.46, tags: [] },
-  { id: "salad_mix", name: "Salad Mix", unit: "bag", price: 1.97, tags: ["vegetarian"] },
+  { id: "frozen_pizza", name: "Frozen Pizza", unit: "pizza", price: 4.46, tags: ["under30"] },
+  { id: "salad_mix", name: "Salad Mix", unit: "bag", price: 1.97, tags: ["vegetarian", "under30"] },
   { id: "salad_dressing", name: "Salad Dressing", unit: "bottle", price: 2.37, tags: ["vegetarian"] },
-  { id: "chicken_breast", name: "Chicken Breast", unit: "lb", price: 2.57, tags: [] },
+  { id: "chicken_breast", name: "Chicken Breast", unit: "lb", price: 2.57, tags: ["highProtein"] },
   { id: "romaine_lettuce", name: "Romaine Lettuce", unit: "head", price: 2.06, tags: ["vegetarian"] },
   { id: "caesar_dressing", name: "Caesar Dressing", unit: "bottle", price: 2.37, tags: [] },
   { id: "parmesan_cheese", name: "Parmesan Cheese", unit: "container", price: 3.00, tags: ["vegetarian"] },
